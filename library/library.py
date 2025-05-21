@@ -7,4 +7,25 @@ class Book:
         self.isbn = isbn
         self.publisher = publisher
         self.pageCount = pageCount
-        self.id += 1  # incremental unique ID for every single book
+        Book.__id += 1  # incremental unique ID for every single book
+
+class Reader:
+    __readerID = 0
+
+    def __init__(self, name: str, surname: str, phone_num: str):
+        self.name = name
+        self,surname = surname
+
+        for n in phone_num:
+            if str(phone_num) < str(0) or str(phone_num) > str(9):
+                except InvalidPhoneNumber:
+                    print("Phone number can contain only numbers")
+                else:
+                    self.phone_num = phone_num
+
+        Reader.__readerID += 1
+
+
+class InvalidPhoneNumber(Exception):
+    """Invalid phone number"""
+
