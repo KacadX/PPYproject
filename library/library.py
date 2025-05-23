@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+from datetime import datetime, timedelta
 
 
 #Part responsible for books
@@ -123,8 +124,24 @@ class Reader:
         if not getattr(book, "borrowed", False):
             self.borrowed_books.append(book)
             book.borrowed = True
+
+            book.borrowed_date = datetime.now()
         else:
             print("Can't borrow already borrowed book.")
+
+    def return_book(self, book):
+        date_until_fee = book.borrowed_date + timedelta(days=30)
+        fee = 0
+
+        if datetime.now() > date_until_fee
+            difference = (datetime.now() - date_until_fee).days
+            fee = 0.5 * difference
+
+        book.borrowed = False
+        book.borrowed_date = None
+
+        return fee
+        
 
     def to_dict(self):
         return {
