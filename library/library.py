@@ -9,12 +9,12 @@ books_columns = ["ID", "Title", "Author", "ISBN", "Publisher", "Pages"]
 class Book:
     __id = 0
 
-    def __init__(self, title: str, author: str, isbn: int, publisher: str, pages: int):
+    def __init__(self, title: str, author: str, isbn: int, publisher: str, page_count: int):
         self.title = title
         self.author = author
         self.isbn = isbn
         self.publisher = publisher
-        self.pages = pages
+        self.page_count = page_count
         Book.__id += 1
         self.id = Book.__id
 
@@ -25,7 +25,7 @@ class Book:
             "Author": self.author,
             "ISBN": self.isbn,
             "Publisher": self.publisher,
-            "Pages": self.pages
+            "Pages": self.page_count
         }
 
     @staticmethod
@@ -42,7 +42,7 @@ class Book:
         return book
 
     def __str__(self):
-        return f"{self.title} ({self.author}, {self.publisher}, {self.pages} pages.)"
+        return f"{self.title} ({self.author}, {self.publisher}, {self.page_count} pages.)"
 
 def excel_file_preparer():
     os.makedirs("data", exist_ok=True)
@@ -80,7 +80,7 @@ def edit_book(book_id: int, updated_book: Book):
             updated_book.author,
             updated_book.isbn,
             updated_book.publisher,
-            updated_book.pages
+            updated_book.page_count
         ]
         df.to_excel(books_path, index=False)
     else:
