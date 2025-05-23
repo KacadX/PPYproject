@@ -1,52 +1,191 @@
-class Book:
-    __bookID = 0
+import pandas as pd
+import os
 
-    def __init__(self, title: str, author: str, isbn: str, publisher: str, pageCount: int):
+
+#Part responsible for books
+books_path = "./data/books.xlsx"
+books_columns = ["ID", "Title", "Author", "ISBN", "Publisher", "Pages"]
+
+class Book:
+    __id = 0
+
+    def __init__(self, title: str, author: str, isbn: int, publisher: str, page_count: int):
         self.title = title
         self.author = author
         self.isbn = isbn
         self.publisher = publisher
-        self.pageCount = pageCount
-        self.__id = Book.__bookID
-        Book.__bookID += 1 # Incremental unique ID for every single book
-        borrowed = False
+        self.page_count = page_count
+        Book.__id += 1
+        self.id = Book.__id
 
-    @property
-    def id(self):
-        return self.__id
+    def to_dict(self):
+        return {
+            "ID": self.id,
+            "Title": self.title,
+            "Author": self.author,
+            "ISBN": self.isbn,
+            "Publisher": self.publisher,
+            "Pages": self.page_count
+        }
+
+    @staticmethod
+    def from_dict(d):
+        book = Book(
+            d["Title"],
+            d["Author"],
+            d["ISBN"],
+            d["Publisher"],
+            d["Pages"]
+        )
+        book.id = d["ID"]
+        Book.__id = max(Book.__id, d["ID"])  # ensure unique IDs
+        return book
+
+    def __str__(self):
+        return f"{self.title} ({self.author}, {self.publisher}, {self.page_count} pages.)"
+
+def excel_file_preparer():
+    os.makedirs("data", exist_ok=True)
+    if not os.path.exists(books_path):
+        df = pd.DataFrame(columns=books_columns)
+        df.to_excel(books_path, index=False)
+
+def load_books():
+    excel_file_preparer()
+    return pd.read_excel(books_path)
+
+def load_books_object():
+    df = load_books()
+    return [Book.from_dict(row) for _, row in df.iterrows()]
+
+def add_book(book: Book):
+    df = load_books()
+    new_id = 1 if df.empty else int(df["ID"].max()) + 1
+    book.id = new_id
+    Book._Book__id = new_id
+    df = pd.concat([df,pd.DataFrame([book.to_dict()])], ignore_index=True)
+    df.to_excel(books_path, index=False)
+
+def remove_book(book_id: int):
+    df = load_books()
+    df = df[df["ID"] != book_id]
+    df.to_excel(books_path, index=False)
+
+
+def edit_book(book_id: int, updated_book: Book):
+    df = load_books()
+    if book_id in df["ID"].values:
+        df.loc[df["ID"] == book_id, ["Title", "Author", "ISBN", "Publisher", "Pages"]] = [
+            updated_book.title,
+            updated_book.author,
+            updated_book.isbn,
+            updated_book.publisher,
+            updated_book.page_count
+        ]
+        df.to_excel(books_path, index=False)
+    else:
+        print(f"No book with ID {book_id} found.")
+
+
+def search_book(query: str):
+    df = load_books()
+    query = query.lower()
+    mask = (
+        df["Title"].str.lower().str.contains(query) |
+        df["Author"].str.lower().str.contains(query) |
+        df["Publisher"].str.lower().str.contains(query) |
+        df["ISBN"].astype(str).str.contains(query)
+    )
+    return df[mask]
+
+#Part responsible for readers
+readers_path = "./data/readers.xlsx"
+readers_columns = ["ID", "Name", "Surname", "Phone"]
+
+class InvalidPhoneNumber(Exception):
+    """Raised when phone number is invalid."""
 
 class Reader:
     __readerID = 0
 
     def __init__(self, name: str, surname: str, phone_num: str):
+        if not phone_num.isdigit() or len(phone_num) != 9:
+            raise InvalidPhoneNumber("Phone number must consist of exactly 9 digits.")
+
         self.name = name
         self.surname = surname
-
-        # Check if phone number is valid
-        if len(str(phone_num)) != 9:
-            except InvalidPhoneNumber:
-                print("Phone number must consist of 9 digits")
-
-        for n in phone_num:
-            if str(n) < str(0) or str(n) > str(9):
-                except InvalidPhoneNumber:
-                    print("Phone number can contain only numbers")
-                else:
-                    self.phone_num = phone_num
-
-        self.__id = Reader.__readerID
+        self.phone_num = phone_num
         Reader.__readerID += 1
-
+        self.id = Reader.__readerID
         self.borrowed_books = []
 
-    def borrow(self, book: Book):
-        if book.borrowed == False:
+    def borrow(self, book):
+        if not getattr(book, "borrowed", False):
             self.borrowed_books.append(book)
             book.borrowed = True
         else:
-            print("Can't borrow already borrowed book")
+            print("Can't borrow already borrowed book.")
 
+    def to_dict(self):
+        return {
+            "ID": self.id,
+            "Name": self.name,
+            "Surname": self.surname,
+            "Phone": self.phone_num
+        }
 
-class InvalidPhoneNumber(Exception):
-    """Invalid phone number"""
+    @staticmethod
+    def from_dict(d):
+        reader = Reader(d["Name"], d["Surname"], str(d["Phone"]))
+        reader.id = d["ID"]
+        Reader.__readerID = max(Reader.__readerID, d["ID"])
+        return reader
 
+def prepare_readers_file():
+    os.makedirs("data", exist_ok=True)
+    if not os.path.exists(readers_path):
+        df = pd.DataFrame(columns=readers_columns)
+        df.to_excel(readers_path, index=False)
+
+def load_readers():
+    prepare_readers_file()
+    return pd.read_excel(readers_path)
+
+def load_readers_object():
+    df = load_readers()
+    return [Reader.from_dict(row) for _, row in df.iterrows()]
+
+def add_reader(reader: Reader):
+    df = load_readers()
+    new_id = 1 if df.empty else int(df["ID"].max()) + 1
+    reader.id = new_id
+    Reader._Reader__readerID = new_id
+    df = pd.concat([df, pd.DataFrame([reader.to_dict()])], ignore_index=True)
+    df.to_excel(readers_path, index=False)
+
+def remove_reader(reader_id: int):
+    df = load_readers()
+    df = df[df["ID"] != reader_id]
+    df.to_excel(readers_path, index=False)
+
+def edit_reader(reader_id: int, updated_reader: Reader):
+    df = load_readers()
+    if reader_id in df["ID"].values:
+        df.loc[df["ID"] == reader_id, ["Name", "Surname", "Phone"]] = [
+            updated_reader.name,
+            updated_reader.surname,
+            updated_reader.phone_num
+        ]
+        df.to_excel(readers_path, index=False)
+    else:
+        print(f"No reader with ID {reader_id}.")
+
+def search_reader(query: str):
+    df = load_readers()
+    query = query.lower()
+    mask = (
+        df["Name"].str.lower().str.contains(query) |
+        df["Surname"].str.lower().str.contains(query) |
+        df["Phone"].astype(str).str.contains(query)
+    )
+    return df[mask]
