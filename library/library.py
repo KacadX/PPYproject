@@ -118,24 +118,36 @@ class Reader:
         self.phone_num = phone_num
         Reader.__readerID += 1
         self.id = Reader.__readerID
-        self.borrowed_books = []
+        self.borrowed_books: list[Book] = []
+
+        self.past_borrowed: dict[book, datetime.date] = {}
+        self.past_returned: dict[book, datetime.date] = {}
+        self.past_extended: dict[book, datetime.date] = {}
+        self.past_reserved: dict[book, datetime.date] = {}
 
     def borrow(self, book):
         if not getattr(book, "borrowed", False):
-            self.borrowed_books.append(book)
-            book.borrowed = True
+            now = datetime.now()
 
-            book.borrowed_date = datetime.now()
+            self.borrowed_books.append(book)
+            self.past_borrowed = (book, now)
+
+            book.borrowed = True
+            book.borrowed_date = now
         else:
-            print("Can't borrow already borrowed book.")
+            return "Can't borrow already borrowed book."
 
     def return_book(self, book):
+        now = datetime.now()
         date_until_fee = book.borrowed_date + timedelta(days=30)
         fee = 0
 
-        if datetime.now() > date_until_fee
-            difference = (datetime.now() - date_until_fee).days
+
+        if now > date_until_fee
+            difference = (now - date_until_fee).days
             fee = 0.5 * difference
+
+        self.past_returned = (book, now)
 
         book.borrowed = False
         book.borrowed_date = None
