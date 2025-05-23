@@ -18,6 +18,8 @@ class Book:
         self.page_count = page_count
         Book.__id += 1
         self.id = Book.__id
+        self.borrowed_date: datetime.date = None
+        self.return_date: datetime.date = None
 
     def to_dict(self):
         return {
@@ -120,40 +122,59 @@ class Reader:
         self.id = Reader.__readerID
         self.borrowed_books: list[Book] = []
 
-        self.past_borrowed: dict[book, datetime.date] = {}
-        self.past_returned: dict[book, datetime.date] = {}
-        self.past_extended: dict[book, datetime.date] = {}
-        self.past_reserved: dict[book, datetime.date] = {}
+        self.past_borrowed: dict[Book, list[datetime.date]] = {}
+        self.past_returned: dict[Book, list[datetime.date]] = {}
+        self.past_extended: dict[Book, list[datetime.date]] = {}
+        self.past_reserved: dict[Book, list[datetime.date]] = {}
 
-    def borrow(self, book):
+    def borrow(self, book: Book):
         if not getattr(book, "borrowed", False):
             now = datetime.now()
 
             self.borrowed_books.append(book)
-            self.past_borrowed = (book, now)
+
+            # Either create the list or append to the list
+            if book in self.past_borrowed:
+                    self.past_borrowed[book].append(date)
+                else:
+                    self.past_borrowed[book] = [date]
 
             book.borrowed = True
             book.borrowed_date = now
+            book.return_date = now + timedelta(days=30)
         else:
             return "Can't borrow already borrowed book."
 
-    def return_book(self, book):
+    def return_book(self, book: Book):
         now = datetime.now()
-        date_until_fee = book.borrowed_date + timedelta(days=30)
+        date_until_fee = book.return_date
         fee = 0
-
 
         if now > date_until_fee
             difference = (now - date_until_fee).days
             fee = 0.5 * difference
 
-        self.past_returned = (book, now)
+        if book in self.past_returned:
+                self.past_returned[book].append(date)
+            else:
+                self.past_returned[book] = [date]
 
         book.borrowed = False
         book.borrowed_date = None
 
         return fee
         
+    def extend(self, book: Book):
+        if not book.borrowed:
+            return "can't extend book that hasn't been borrowed"
+        
+        if book in self.past_extended:
+                self.past_extended[book].append(date)
+            else:
+                self.past_extended[book] = [date]
+        book.return_date += timedelta(days=30)
+
+        return "Extended the return date"
 
     def to_dict(self):
         return {
