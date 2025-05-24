@@ -101,6 +101,17 @@ def search_book(query: str):
     )
     return df[mask]
 
+# Part responsible for addresses
+class Address:
+    def __init__(self, city: str, street: str, apartment: int, postal_code: str):
+        self.__street = street
+        self.__city = city
+        self.__postal_code = postal_code
+        self.__apartment = apartment
+
+    def __str__(self):
+        return f"{self.__city}, {self.__street}, {self.__apartment} {self.postal_code}"
+
 #Part responsible for readers
 readers_path = "./data/readers.xlsx"
 readers_columns = ["ID", "Name", "Surname", "Phone"]
@@ -111,7 +122,7 @@ class InvalidPhoneNumber(Exception):
 class Reader:
     __readerID = 0
 
-    def __init__(self, name: str, surname: str, phone_num: str):
+    def __init__(self, name: str, surname: str, phone_num: str, address: Address):
         if not phone_num.isdigit() or len(phone_num) != 9:
             raise InvalidPhoneNumber("Phone number must consist of exactly 9 digits.")
 
@@ -239,3 +250,4 @@ def search_reader(query: str):
         df["Phone"].astype(str).str.contains(query)
     )
     return df[mask]
+
