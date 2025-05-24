@@ -400,4 +400,15 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 
-.idea
+.idea/
+# Devenv
+.devenv.*
+devenv.local.nix
+devenv.lock
+.envrc
+
+# direnv
+.direnv/
+
+# pre-commit
+.pre-commit-config.yaml
