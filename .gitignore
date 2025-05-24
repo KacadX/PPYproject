@@ -401,14 +401,16 @@ FodyWeavers.xsd
 *.sln.iml
 
 .idea/
+
 # Devenv
 .devenv.*
-devenv.local.nix
+devenv.nix
 devenv.lock
+devenv.yaml
 .envrc
 
 # direnv
-.direnv/
+.devenv/
 
 # pre-commit
 .pre-commit-config.yaml
