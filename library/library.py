@@ -191,7 +191,10 @@ class Reader:
                 self.past_returned[book].append(now)
         else:
             self.past_returned[book] = [now]
+<<<<<<< HEAD
         self.borrowed_books.remove(book)
+=======
+>>>>>>> 1731705 (first three buttons works now)
 
         book.borrowed = False
         book.lent_date = None
@@ -205,7 +208,13 @@ class Reader:
     def extend(self, book: Book):
         now = datetime.now()
         if not book.borrowed:
-            return "Can't extend book that hasn't been lent"
+            return "can't extend book that hasn't been borrowed"
+        
+        if book in self.past_extended:
+                self.past_extended[book].append(now)
+        else:
+            self.past_extended[book] = [now]
+        book.return_date += timedelta(days=30)
 
         if not book.lent_to == self:
             return "Can't extend book lent by someone else"
