@@ -18,8 +18,9 @@ class Book:
         self.page_count = page_count
         Book.__id += 1
         self.id = Book.__id
-        self.borrowed_date: datetime.date = None
+        self.lent_date: datetime.date = None
         self.return_date: datetime.date = None
+        self.lent = False
 
     def to_dict(self):
         return {
@@ -46,6 +47,10 @@ class Book:
 
     def __str__(self):
         return f"{self.title} ({self.author}, {self.publisher}, {self.page_count} pages.)"
+
+"""
+===== Pandas books =====
+"""
 
 def excel_file_preparer():
     os.makedirs("data", exist_ok=True)
@@ -146,15 +151,15 @@ class Reader:
 
             # Either create the list or append to the list
             if book in self.past_borrowed:
-                    self.past_borrowed[book].append(date)
+                    self.past_borrowed[book].append(datetime.now())
             else:
-                self.past_borrowed[book] = [date]
+                self.past_borrowed[book] = [datetime.now()]
 
-            book.borrowed = True
-            book.borrowed_date = now
+            book.lent = True
+            book.lent_date = now
             book.return_date = now + timedelta(days=30)
         else:
-            return "Can't borrow already borrowed book."
+            return "Can't borrow already lent book."
 
     def return_book(self, book: Book):
         now = datetime.now()
@@ -166,23 +171,23 @@ class Reader:
             fee = 0.5 * difference
 
         if book in self.past_returned:
-                self.past_returned[book].append(date)
+                self.past_returned[book].append(datetime.now())
         else:
-            self.past_returned[book] = [date]
+            self.past_returned[book] = [datetime.now()]
 
         book.borrowed = False
-        book.borrowed_date = None
+        book.lent_date = None
 
         return fee
         
     def extend(self, book: Book):
         if not book.borrowed:
-            return "can't extend book that hasn't been borrowed"
+            return "can't extend book that hasn't been lent"
         
         if book in self.past_extended:
-                self.past_extended[book].append(date)
+                self.past_extended[book].append(datetime.now())
         else:
-            self.past_extended[book] = [date]
+            self.past_extended[book] = [datetime.now()]
         book.return_date += timedelta(days=30)
 
         return "Extended the return date"
@@ -207,6 +212,10 @@ def prepare_readers_file():
     if not os.path.exists(readers_path):
         df = pd.DataFrame(columns=readers_columns)
         df.to_excel(readers_path, index=False)
+
+"""
+===== Pandas readers =====
+"""
 
 def load_readers():
     prepare_readers_file()
@@ -250,4 +259,41 @@ def search_reader(query: str):
         df["Phone"].astype(str).str.contains(query)
     )
     return df[mask]
+
+# Library database
+class Library:
+    def __init__(self):
+        self.readers: list[Reader] = []
+        self.books: list[Book] = []
+
+    def show_available_books(self) -> list[Book]:
+        books = self.books
+
+        for book in books:
+            if not book.lent:
+                available_books.append(book)
+        return available_books
+
+    def show_lent_books(self) -> list[Book]:
+        books = self.books
+
+        for book in books:
+            if book.lent:
+                lent_books.append(book)
+        return lent_books
+    
+    def objects_from_excel(self, path: str, objects: list) -> list:
+        df = pd.read_excel(path)
+
+        for index, row in df.iterrows():
+            row_dict = row.to_dict()
+            objects.append(row_dict)
+
+        return objects
+
+    def readers_from_excel(self, path):
+        self.objects_from_excel(path, self.readers)
+
+    def books_from_excel(self, path):
+        self.objects_from_excel(path, self.books)
 
