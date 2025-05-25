@@ -322,14 +322,14 @@ class Library:
     def objects_from_excel(self, path: str, objects: list) -> list:
         try:
             df = pd.read_excel(path)
+            for index, row in df.iterrows():
+                row_dict = row.to_dict()
+                objects.append(row_dict)
+
+            return objects
         except FileNotFoundError:
             print(f"Couldn't open file {path}")
 
-        for index, row in df.iterrows():
-            row_dict = row.to_dict()
-            objects.append(row_dict)
-
-        return objects
 
     def readers_from_excel(self, path):
         self.objects_from_excel(path, self.readers)
