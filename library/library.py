@@ -135,9 +135,9 @@ class Reader:
 
             # Either create the list or append to the list
             if book in self.past_borrowed:
-                    self.past_borrowed[book].append(date)
+                    self.past_borrowed[book].append(now)
             else:
-                self.past_borrowed[book] = [date]
+                self.past_borrowed[book] = [now]
 
             book.borrowed = True
             book.borrowed_date = now
@@ -155,9 +155,9 @@ class Reader:
             fee = 0.5 * difference
 
         if book in self.past_returned:
-                self.past_returned[book].append(date)
+                self.past_returned[book].append(now)
         else:
-            self.past_returned[book] = [date]
+            self.past_returned[book] = [now]
 
         book.borrowed = False
         book.borrowed_date = None
@@ -165,13 +165,14 @@ class Reader:
         return fee
         
     def extend(self, book: Book):
+        now = datetime.now()
         if not book.borrowed:
             return "can't extend book that hasn't been borrowed"
         
         if book in self.past_extended:
-                self.past_extended[book].append(date)
+                self.past_extended[book].append(now)
         else:
-            self.past_extended[book] = [date]
+            self.past_extended[book] = [now]
         book.return_date += timedelta(days=30)
 
         return "Extended the return date"
