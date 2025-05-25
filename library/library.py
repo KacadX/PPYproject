@@ -16,11 +16,17 @@ class Book:
         self.isbn = isbn
         self.publisher = publisher
         self.page_count = page_count
+
         Book.__id += 1
         self.id = Book.__id
+
         self.lent_date: datetime.date = None
+        self.lent_to: Reader = None
         self.return_date: datetime.date = None
         self.lent = False
+        self.reserved = False
+        self.reserved_until: datetime.date = datetime.now() # Just to be sure you can check between now and this variable when trying to borrow
+        self.reserved_by: Reader = None
 
     def to_dict(self):
         return {
@@ -42,7 +48,7 @@ class Book:
             d["Pages"]
         )
         book.id = d["ID"]
-        Book.__id = max(Book.__id, d["ID"])  # ensure unique IDs
+        Book.__id = max(Book.__id, d["ID"])  # Ensure unique IDs
         return book
 
     def __str__(self):
@@ -135,7 +141,7 @@ class Reader:
         self.surname = surname
         self.phone_num = phone_num
         Reader.__readerID += 1
-        self.id = Reader.__readerID
+        self.__id = Reader.__readerID
         self.borrowed_books: list[Book] = []
 
         self.past_borrowed: dict[Book, list[datetime.date]] = {}
@@ -143,23 +149,29 @@ class Reader:
         self.past_extended: dict[Book, list[datetime.date]] = {}
         self.past_reserved: dict[Book, list[datetime.date]] = {}
 
+    def getID(self):
+        return self.__id
+
     def borrow(self, book: Book):
-        if not getattr(book, "borrowed", False):
-            now = datetime.now()
+        now = datetime.now()
 
-            self.borrowed_books.append(book)
+        if ((not book.reserved_until < now) or book.reserved_by == self):
+            if not book.lent:
+                self.borrowed_books.append(book)
 
-            # Either create the list or append to the list
-            if book in self.past_borrowed:
-                    self.past_borrowed[book].append(datetime.now())
+                # Either create the list or append to the existing one
+                if book in self.past_borrowed:
+                        self.past_borrowed[book].append(now())
+                else:
+                    self.past_borrowed[book] = [now()]
+
+                book.lent = True
+                book.lent_date = now
+                book.return_date = now + timedelta(days=30)
             else:
-                self.past_borrowed[book] = [datetime.now()]
-
-            book.lent = True
-            book.lent_date = now
-            book.return_date = now + timedelta(days=30)
+                return "Can't borrow already lent book."
         else:
-            return "Can't borrow already lent book."
+            return: "Book lent and reserved by someone else"
 
     def return_book(self, book: Book):
         now = datetime.now()
@@ -170,10 +182,13 @@ class Reader:
             difference = (now - date_until_fee).days
             fee = 0.5 * difference
 
+        # Either create the list or append to the existing one
         if book in self.past_returned:
-                self.past_returned[book].append(datetime.now())
+                self.past_returned[book].append(now)
         else:
-            self.past_returned[book] = [datetime.now()]
+            self.past_returned[book] = [now]
+
+        self.borrowed_books.remove(book)
 
         book.borrowed = False
         book.lent_date = None
@@ -182,19 +197,41 @@ class Reader:
         
     def extend(self, book: Book):
         if not book.borrowed:
-            return "can't extend book that hasn't been lent"
-        
-        if book in self.past_extended:
-                self.past_extended[book].append(datetime.now())
-        else:
-            self.past_extended[book] = [datetime.now()]
-        book.return_date += timedelta(days=30)
+            return "Can't extend book that hasn't been lent"
 
-        return "Extended the return date"
+        if not book.lent_to == self:
+            return "Can't extend book lent by someone else"
+
+        # Either create the list or append to the existing one
+        if not book.reserved:
+            if book in self.past_extended:
+                    self.past_extended[book].append(datetime.now())
+            else:
+                self.past_extended[book] = [datetime.now()]
+            book.return_date += timedelta(days=30)
+
+            return f"Extended the return date, new return date: {book.return_date}"
+        else:
+            return "Can't extend - book reserved by someone"
+
+    def reserve(self, book: Book):
+        now = datetime.now()
+
+        if not book.reserved:
+            book.reserved_until = book.return_date + timedelta(days=7)
+            book.reserved_by = self
+
+            # Either create the list or append to the existing one
+            if book in self.past_borrowed:
+                    self.past_reserved[book].append(datetime.now())
+            else:
+                self.past_reserved[book] = [datetime.now()]
+        else:
+            return "can't reserve book - already reserved"
 
     def to_dict(self):
         return {
-            "ID": self.id,
+            "ID": self.__id,
             "Name": self.name,
             "Surname": self.surname,
             "Phone": self.phone_num
@@ -203,7 +240,7 @@ class Reader:
     @staticmethod
     def from_dict(d):
         reader = Reader(d["Name"], d["Surname"], str(d["Phone"]))
-        reader.id = d["ID"]
+        reader.__id = d["ID"]
         Reader.__readerID = max(Reader.__readerID, d["ID"])
         return reader
 
@@ -228,7 +265,7 @@ def load_readers_object():
 def add_reader(reader: Reader):
     df = load_readers()
     new_id = 1 if df.empty else int(df["ID"].max()) + 1
-    reader.id = new_id
+    reader.__id = new_id
     Reader._Reader__readerID = new_id
     df = pd.concat([df, pd.DataFrame([reader.to_dict()])], ignore_index=True)
     df.to_excel(readers_path, index=False)
@@ -283,7 +320,10 @@ class Library:
         return lent_books
     
     def objects_from_excel(self, path: str, objects: list) -> list:
-        df = pd.read_excel(path)
+        try:
+            df = pd.read_excel(path)
+        except FileNotFoundError:
+            print(f"Couldn't open file {path}")
 
         for index, row in df.iterrows():
             row_dict = row.to_dict()
