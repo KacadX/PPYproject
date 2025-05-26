@@ -366,3 +366,4 @@ class Library:
 
     def books_from_excel(self, path):
         self.objects_from_excel(path, self.books)
+        return df[mask]
