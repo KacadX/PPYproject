@@ -143,6 +143,8 @@ class Reader:
         self.name = name
         self.surname = surname
         self.phone_num = phone_num
+        self.address = address
+
         Reader.__readerID += 1
         self.__id = Reader.__readerID
         self.borrowed_books: list[Book] = []
@@ -158,30 +160,37 @@ class Reader:
     def borrow(self, book: Book):
         now = datetime.now()
 
-        if ((not book.reserved_until < now) or book.reserved_by == self):
-            if not book.lent:
-                self.borrowed_books.append(book)
+        try:
+            if ((not book.reserved_until < now) or book.reserved_by == self):
+                if not book.lent:
+                    self.borrowed_books.append(book)
 
-                # Either create the list or append to the existing one
-                if book in self.past_borrowed:
-                        self.past_borrowed[book].append(now())
+                    # Either create the list or append to the existing one
+                    if book in self.past_borrowed:
+                        self.past_borrowed[book].append(now)
+                    else:
+                        self.past_borrowed[book] = [now]
+
+                    if book.reserved_by == self:
+                        book.reserved = False
+                        book.reserved_by = None
+
+                    book.lent = True
+                    book.lent_date = now
+                    book.return_date = now + timedelta(days=30)
                 else:
-                    self.past_borrowed[book] = [now()]
-
-                book.lent = True
-                book.lent_date = now
-                book.return_date = now + timedelta(days=30)
+                    raise Exception("Can't borrow already lent book.")
             else:
-                return "Can't borrow already lent book."
-        else:
-            return: "Book lent and reserved by someone else"
+                raise Exception("Book lent and reserved by someone else.")
+        except Exception as e:
+            return f"Error: {e}"
 
     def return_book(self, book: Book):
         now = datetime.now()
         date_until_fee = book.return_date
         fee = 0
 
-        if now > date_until_fee:
+        if now.day() > date_until_fee.day():
             difference = (now - date_until_fee).days
             fee = 0.5 * difference
 
@@ -196,13 +205,9 @@ class Reader:
         book.borrowed = False
         book.lent_date = None
 
-        if book.reserved == True and book.reserved_by == self:
-            book.reserved = False
-            book.reserved_by = None
-
         return fee
         
-    def extend(self, book: Book):
+    def extend_return_date(self, book: Book):
         if not book.borrowed:
             return "Can't extend book that hasn't been lent"
 
