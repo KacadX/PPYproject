@@ -332,12 +332,12 @@ class Library:
                 raise FileNotFoundError
         except FileNotFoundError as e:
             print(e)
-            df = pd.read_excel(path)
-            for index, row in df.iterrows():
-                row_dict = row.to_dict()
-                objects.append(row_dict)
+        df = pd.read_excel(path)
+        for index, row in df.iterrows():
+            row_dict = row.to_dict()
+            objects.append(row_dict)
 
-            return objects
+        return objects
 
 
     def readers_from_excel(self, path):
