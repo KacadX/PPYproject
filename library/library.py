@@ -155,16 +155,23 @@ class Reader:
         self.past_extended: dict[Book, list[datetime.date]] = {}
         self.past_reserved: dict[Book, list[datetime.date]] = {}
 
+<<<<<<< HEAD
     def getID(self):
         return self.__id
 
     def borrow(self, book: Book):
         now = datetime.now()
+=======
+    def lend(self, book: Book):
+        if not getattr(book, "borrowed", False):
+            now = datetime.now()
+>>>>>>> 294ddb9 (dodana działająca logika przycisków i dodawania książek i czytelników)
 
         if ((not book.reserved_until < now) or book.reserved_by == self):
             if not book.lent:
                 self.borrowed_books.append(book)
 
+<<<<<<< HEAD
                 if book in self.past_borrowed:
                         self.past_borrowed[book].append(now())
                 else:
@@ -173,6 +180,28 @@ class Reader:
                 book.lent = True
                 book.lent_date = now
                 book.return_date = now + timedelta(days=30)
+=======
+<<<<<<< HEAD
+                    # Either create the list or append to the existing one
+                    if book in self.past_borrowed:
+                        self.past_borrowed[book].append(now)
+                    else:
+                        self.past_borrowed[book] = [now]
+
+                    if book.reserved_by == self:
+                        book.reserved = False
+                        book.reserved_by = None
+
+                    book.lent = True
+                    book.lent_date = now
+                    book.return_date = now + timedelta(days=30)
+                else:
+                    raise Exception("Can't borrow already lent book.")
+=======
+            if book in self.past_borrowed:
+                    self.past_borrowed[book].append(now)
+>>>>>>> 294ddb9 (dodana działająca logika przycisków i dodawania książek i czytelników)
+>>>>>>> 35ef245 (dodana działająca logika przycisków i dodawania książek i czytelników)
             else:
                 return "Can't borrow already lent book."
         else:
@@ -311,6 +340,7 @@ def search_reader(query: str):
         df["Surname"].str.lower().str.contains(query) |
         df["Phone"].astype(str).str.contains(query)
     )
+<<<<<<< HEAD
     return df[mask]
 
 # Library database
@@ -354,3 +384,10 @@ class Library:
 
     def books_from_excel(self, path):
         self.objects_from_excel(path, self.books)
+<<<<<<< HEAD
+=======
+
+=======
+    return df[mask]
+>>>>>>> 294ddb9 (dodana działająca logika przycisków i dodawania książek i czytelników)
+>>>>>>> 35ef245 (dodana działająca logika przycisków i dodawania książek i czytelników)

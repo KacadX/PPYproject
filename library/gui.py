@@ -278,3 +278,13 @@ class GuiApp(App):
         self.root_widget.clear_widgets()
         new_layout = layout_class(switch_layout_callback=self.switch_layout)
         self.root_widget.add_widget(new_layout)
+<<<<<<< HEAD
+=======
+=======
+        self.root_widget.add_widget(new_layout)
+<<<<<<< HEAD
+>>>>>>> 1731705 (first three buttons works now)
+=======
+>>>>>>> 294ddb9 (dodana działająca logika przycisków i dodawania książek i czytelników)
+>>>>>>> 35ef245 (dodana działająca logika przycisków i dodawania książek i czytelników)
+>>>>>>> c4fa839 (dodana działająca logika przycisków i dodawania książek i czytelników)
