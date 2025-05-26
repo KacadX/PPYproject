@@ -25,7 +25,7 @@ class Book:
         self.return_date: datetime.date = None
         self.lent = False
         self.reserved = False
-        self.reserved_until: datetime.date = datetime.now() # Just to be sure you can check between now and this variable when trying to borrow
+        self.reserved_until: datetime.date = datetime.now()
         self.reserved_by: Reader = None
 
     def to_dict(self):
@@ -137,9 +137,9 @@ class Reader:
     __readerID = 0
 
     def __init__(self, name: str, surname: str, phone_num: str, address: Address):
-    try:
-        if not phone_num.isdigit() or len(phone_num) != 9:
-            raise InvalidPhoneNumber("Phone number must consist of exactly 9 digits.")
+        try:
+            if not phone_num.isdigit() or len(phone_num) != 9:
+                raise InvalidPhoneNumber("Phone number must consist of exactly 9 digits.")
         except InvalidPhoneNumber as e:
             print(e)
 
@@ -165,7 +165,6 @@ class Reader:
             if not book.lent:
                 self.borrowed_books.append(book)
 
-                # Either create the list or append to the existing one
                 if book in self.past_borrowed:
                         self.past_borrowed[book].append(now())
                 else:
@@ -177,7 +176,7 @@ class Reader:
             else:
                 return "Can't borrow already lent book."
         else:
-            return: "Book lent and reserved by someone else"
+            return "Book lent and reserved by someone else"
 
     def return_book(self, book: Book):
         now = datetime.now()
@@ -188,7 +187,6 @@ class Reader:
             difference = (now - date_until_fee).days
             fee = 0.5 * difference
 
-        # Either create the list or append to the existing one
         if book in self.past_returned:
                 self.past_returned[book].append(now)
         else:
@@ -231,7 +229,6 @@ class Reader:
             book.reserved_until = book.return_date + timedelta(days=7)
             book.reserved_by = self
 
-            # Either create the list or append to the existing one
             if book in self.past_borrowed:
                     self.past_reserved[book].append(datetime.now())
             else:
@@ -318,16 +315,16 @@ class Library:
 
         for book in books:
             if not book.lent and not book.reserved:
-                available_books.append(book)
-        return available_books
+                self.available_books.append(book)
+        return self.available_books
 
     def show_lent_books(self) -> list[Book]:
         books = self.books
 
         for book in books:
             if book.lent:
-                lent_books.append(book)
-        return lent_books
+                self.lent_books.append(book)
+        return self.lent_books
     
     def objects_from_excel(self, path: str, objects: list) -> list:
         try:
