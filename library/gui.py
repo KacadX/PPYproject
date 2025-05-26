@@ -46,37 +46,37 @@ class AddReader(BoxLayout):
         super(AddReader, self).__init__(**kwargs)
         self.orientation = 'vertical'
         self.add_widget(Label(text="Add a new reader here."))
-        
-        self.name = TextInput(hint="Name")
-        self.surname = TextInput(hint="Surname")
-        self.phone_num = TextInput(hint="Phone number")
-        self.city = TextInput(hint="City")
-        self.steet = TextInput(hint="Street")
-        self.apartment = TextInput(hint="Apartment")
-        self.postal_code = TextInput(hint="Postal code")
 
-        self.add_widget(__text_input_layout())
-        
-        def __first_collumn_layout(self) -> BoxLayout:
-            layout = BoxLayout(orientation="vertical")
-            layout.add_widget(self.name)
-            layout.add_widget(self.surname)
-            layout.add_widget(self.phone_num)
-            return layout
+        self.name = TextInput(hint_text="Name")
+        self.surname = TextInput(hint_text="Surname")
+        self.phone_num = TextInput(hint_text="Phone number")
+        self.city = TextInput(hint_text="City")
+        self.street = TextInput(hint_text="Street")
+        self.apartment = TextInput(hint_text="Apartment")
+        self.postal_code = TextInput(hint_text="Postal code")
 
-        def __second_collumn_layout(self) -> BoxLayout:
-            layout = BoxLayout(orientation="vertical")
-            second_column_layout.add_widget(self.city)
-            second_column_layout.add_widget(self.street)
-            second_column_layout.add_widget(self.apartment)
-            second_column_layout.add_widget(self.postal_code)
-            return layout
+        self.add_widget(self.text_input_layout())
 
-        def __text_input_layout(self) -> BoxLayout:
-            layout = BoxLayout(orientation="horizontal")
-            layout.add_widget(__first_collumn_layout())
-            layout.add_widget(__second_collumn_layout())
-            return layout
+    def first_column_layout(self) -> BoxLayout:
+        layout = BoxLayout(orientation="vertical")
+        layout.add_widget(self.name)
+        layout.add_widget(self.surname)
+        layout.add_widget(self.phone_num)
+        return layout
+
+    def second_column_layout(self) -> BoxLayout:
+        layout = BoxLayout(orientation="vertical")
+        layout.add_widget(self.city)
+        layout.add_widget(self.street)
+        layout.add_widget(self.apartment)
+        layout.add_widget(self.postal_code)
+        return layout
+
+    def text_input_layout(self) -> BoxLayout:
+        layout = BoxLayout(orientation="horizontal")
+        layout.add_widget(self.first_column_layout())
+        layout.add_widget(self.second_column_layout())
+        return layout
 
 class GuiApp(App):
     def build(self):
