@@ -134,8 +134,11 @@ class Reader:
     __readerID = 0
 
     def __init__(self, name: str, surname: str, phone_num: str, address: Address):
+    try:
         if not phone_num.isdigit() or len(phone_num) != 9:
             raise InvalidPhoneNumber("Phone number must consist of exactly 9 digits.")
+        except InvalidPhoneNumber as e:
+            print(e)
 
         self.name = name
         self.surname = surname
@@ -193,6 +196,10 @@ class Reader:
         book.borrowed = False
         book.lent_date = None
 
+        if book.reserved == True and book.reserved_by == self:
+            book.reserved = False
+            book.reserved_by = None
+
         return fee
         
     def extend(self, book: Book):
@@ -244,15 +251,15 @@ class Reader:
         Reader.__readerID = max(Reader.__readerID, d["ID"])
         return reader
 
+"""
+===== Pandas readers =====
+"""
+
 def prepare_readers_file():
     os.makedirs("data", exist_ok=True)
     if not os.path.exists(readers_path):
         df = pd.DataFrame(columns=readers_columns)
         df.to_excel(readers_path, index=False)
-
-"""
-===== Pandas readers =====
-"""
 
 def load_readers():
     prepare_readers_file()
@@ -285,7 +292,7 @@ def edit_reader(reader_id: int, updated_reader: Reader):
         ]
         df.to_excel(readers_path, index=False)
     else:
-        print(f"No reader with ID {reader_id}.")
+        return(f"No reader with ID {reader_id}.")
 
 def search_reader(query: str):
     df = load_readers()
@@ -307,7 +314,7 @@ class Library:
         books = self.books
 
         for book in books:
-            if not book.lent:
+            if not book.lent and not book.reserved:
                 available_books.append(book)
         return available_books
 
@@ -321,14 +328,16 @@ class Library:
     
     def objects_from_excel(self, path: str, objects: list) -> list:
         try:
+            if not os.path.isfile(path):
+                raise FileNotFoundError
+        except FileNotFoundError as e:
+            print(e)
             df = pd.read_excel(path)
             for index, row in df.iterrows():
                 row_dict = row.to_dict()
                 objects.append(row_dict)
 
             return objects
-        except FileNotFoundError:
-            print(f"Couldn't open file {path}")
 
 
     def readers_from_excel(self, path):
