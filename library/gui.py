@@ -1,5 +1,5 @@
+from kivy.uix.image import Image
 from kivy.uix.spinner import Spinner
-
 from library import *
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
@@ -12,29 +12,38 @@ class Home(BoxLayout):
         super(Home, self).__init__(**kwargs)
         self.orientation = "vertical"
 
+        top_layout = BoxLayout(orientation="horizontal", size_hint_y=0.4)
+
+        left_image = Image(source="./data/bibliotecznyPiems.jpg")
+        welcome_label = Label(text="Welcome in library management system")
+        right_image = Image(source="./data/bibliotecznyPiems.jpg")
+
+        top_layout.add_widget(left_image)
+        top_layout.add_widget(welcome_label)
+        top_layout.add_widget(right_image)
+
         buttons_layout = BoxLayout(orientation="horizontal")
-
-        welcome_label = Label(text="Lorem ipsum")
-
         btn_add_book = Button(text="Add new book")
-        btn_borrow_book = Button(text="Borrow a book")
+        btn_borrow_book = Button(text="Lend a book")
         btn_add_reader = Button(text="Add new reader")
         
         btn_add_book.bind(on_press=lambda x: switch_layout_callback(AddBook))
-        btn_borrow_book.bind(on_press=lambda x: switch_layout_callback(BorrowBook))
+        btn_borrow_book.bind(on_press=lambda x: switch_layout_callback(LendBook))
         btn_add_reader.bind(on_press=lambda x: switch_layout_callback(AddReader))
         
         buttons_layout.add_widget(btn_add_book)
         buttons_layout.add_widget(btn_borrow_book)
         buttons_layout.add_widget(btn_add_reader)
 
-        self.add_widget(welcome_label)
+        self.add_widget(top_layout)
         self.add_widget(buttons_layout)
 
+
 class AddBook(BoxLayout):
-    def __init__(self, **kwargs):
+    def __init__(self, switch_layout_callback, **kwargs):
         super(AddBook, self).__init__(**kwargs)
         self.orientation = 'vertical'
+        self.switch_layout_callback = switch_layout_callback
 
         self.title_input = TextInput(hint_text="Title")
         self.author_input = TextInput(hint_text="Author")
@@ -53,12 +62,24 @@ class AddBook(BoxLayout):
 
         self.add_widget(form_layout)
 
+        buttons_layout = BoxLayout(orientation='horizontal', size_hint_y=0.2)
+
         submit_btn = Button(text="Add Book")
         submit_btn.bind(on_press=self.submit_book)
-        self.add_widget(submit_btn)
+
+        back_btn = Button(text="Back to Home")
+        back_btn.bind(on_press=self.go_back)
+
+        buttons_layout.add_widget(back_btn)
+        buttons_layout.add_widget(submit_btn)
+
+        self.add_widget(buttons_layout)
 
         self.message_label = Label()
         self.add_widget(self.message_label)
+
+    def go_back(self, instance):
+        self.switch_layout_callback(Home)
 
     def submit_book(self, instance):
         title = self.title_input.text.strip()
@@ -94,12 +115,13 @@ class AddBook(BoxLayout):
         self.pages_input.text = ""
 
 
-class BorrowBook(BoxLayout):
-    def __init__(self, **kwargs):
-        super(BorrowBook, self).__init__(**kwargs)
+class LendBook(BoxLayout):
+    def __init__(self, switch_layout_callback, **kwargs):
+        super(LendBook, self).__init__(**kwargs)
         self.orientation = 'vertical'
+        self.switch_layout_callback = switch_layout_callback
 
-        self.add_widget(Label(text="Borrow a Book"))
+        self.add_widget(Label(text="Lend a Book"))
 
         self.reader_spinner = Spinner(text="Select Reader")
         self.book_spinner = Spinner(text="Select Book")
@@ -109,21 +131,33 @@ class BorrowBook(BoxLayout):
         self.add_widget(self.reader_spinner)
         self.add_widget(self.book_spinner)
 
-        borrow_btn = Button(text="Borrow Book")
-        borrow_btn.bind(on_press=self.borrow_book)
-        self.add_widget(borrow_btn)
+        buttons_layout = BoxLayout(orientation='horizontal', size_hint=(1, 0.2))
+
+        back_btn = Button(text="Back to Menu")
+        back_btn.bind(on_press=self.go_back)
+
+        borrow_btn = Button(text="Lend Book")
+        borrow_btn.bind(on_press=self.lend_book)
+
+        buttons_layout.add_widget(back_btn)
+        buttons_layout.add_widget(borrow_btn)
+
+        self.add_widget(buttons_layout)
 
         self.message_label = Label()
         self.add_widget(self.message_label)
 
+    def go_back(self, instance):
+        self.switch_layout_callback(Home)
+
     def update_readers_and_books(self):
         self.readers = load_readers_object()
-        self.books = [b for b in load_books_object() if not getattr(b, "borrowed", False)]
+        self.books = [b for b in load_books_object() if not getattr(b, "lent", False)]
 
         self.reader_spinner.values = [f"{r.id}: {r.name} {r.surname}" for r in self.readers]
         self.book_spinner.values = [f"{b.id}: {b.title}" for b in self.books]
 
-    def borrow_book(self, instance):
+    def lend_book(self, instance):
         reader_text = self.reader_spinner.text
         book_text = self.book_spinner.text
 
@@ -138,19 +172,22 @@ class BorrowBook(BoxLayout):
         book = next((b for b in self.books if b.id == book_id), None)
 
         if reader and book:
-            result = reader.borrow(book)
+            result = reader.lend(book)
             if result is None:
-                self.message_label.text = f"Book '{book.title}' borrowed by {reader.name}."
+                self.message_label.text = f"Book '{book.title}' lent by {reader.name}."
                 self.update_readers_and_books()
             else:
                 self.message_label.text = result
         else:
             self.message_label.text = "Reader or book not found."
 
+
 class AddReader(BoxLayout):
-    def __init__(self, **kwargs):
+    def __init__(self, switch_layout_callback, **kwargs):
         super(AddReader, self).__init__(**kwargs)
         self.orientation = 'vertical'
+        self.switch_layout_callback = switch_layout_callback
+
         self.add_widget(Label(text="Add a new reader here."))
 
         self.name = TextInput(hint_text="Name")
@@ -162,8 +199,25 @@ class AddReader(BoxLayout):
         self.postal_code = TextInput(hint_text="Postal code")
 
         self.add_widget(self.text_input_layout())
-        btn = Button(text="Add Reader")
-        self.add_widget(btn)
+
+        self.message_label = Label(text="")
+        self.add_widget(self.message_label)
+
+        buttons_layout = BoxLayout(orientation='horizontal', size_hint=(1, 0.2))
+
+        back_btn = Button(text="Back to Menu")
+        back_btn.bind(on_press=self.go_back)
+
+        add_btn = Button(text="Add Reader")
+        add_btn.bind(on_press=self.add_reader)
+
+        buttons_layout.add_widget(back_btn)
+        buttons_layout.add_widget(add_btn)
+
+        self.add_widget(buttons_layout)
+
+    def go_back(self, instance):
+        self.switch_layout_callback(Home)
 
     def first_column_layout(self) -> BoxLayout:
         layout = BoxLayout(orientation="vertical")
@@ -186,6 +240,34 @@ class AddReader(BoxLayout):
         layout.add_widget(self.second_column_layout())
         return layout
 
+    def add_reader(self, instance):
+        name = self.name.text.strip()
+        surname = self.surname.text.strip()
+        phone = self.phone_num.text.strip()
+
+        if not name or not surname or not phone:
+            self.message_label.text = "Please fill in all required fields."
+            return
+
+        try:
+            reader = Reader(name, surname, phone)
+            add_reader(reader)
+            self.message_label.text = f"Reader '{name} {surname}' added successfully!"
+            self.clear_inputs()
+        except InvalidPhoneNumber as e:
+            self.message_label.text = f"Invalid phone number: {e}"
+        except Exception as e:
+            self.message_label.text = f"Error: {e}"
+
+    def clear_inputs(self):
+        self.name.text = ""
+        self.surname.text = ""
+        self.phone_num.text = ""
+        self.city.text = ""
+        self.street.text = ""
+        self.apartment.text = ""
+        self.postal_code.text = ""
+
 
 class GuiApp(App):
     def build(self):
@@ -194,5 +276,5 @@ class GuiApp(App):
 
     def switch_layout(self, layout_class):
         self.root_widget.clear_widgets()
-        new_layout = layout_class()
+        new_layout = layout_class(switch_layout_callback=self.switch_layout)
         self.root_widget.add_widget(new_layout)
