@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 
 #Part responsible for books
-books_path = "./data/books.xlsx"
+books_path = "./library/data/books.xlsx"
 books_columns = ["ID", "Title", "Author", "ISBN", "Publisher", "Pages"]
 
 class Book:
@@ -59,7 +59,7 @@ class Book:
 """
 
 def excel_file_preparer():
-    os.makedirs("data", exist_ok=True)
+    os.makedirs("./library/data", exist_ok=True)
     if not os.path.exists(books_path):
         df = pd.DataFrame(columns=books_columns)
         df.to_excel(books_path, index=False)
@@ -73,11 +73,14 @@ def load_books_object():
     return [Book.from_dict(row) for _, row in df.iterrows()]
 
 def add_book(book: Book):
+    excel_file_preparer()
+
     df = load_books()
     new_id = 1 if df.empty else int(df["ID"].max()) + 1
     book.id = new_id
     Book._Book__id = new_id
-    df = pd.concat([df,pd.DataFrame([book.to_dict()])], ignore_index=True)
+    new_df = pd.DataFrame([book.to_dict()])
+    df = pd.concat([df, new_df], ignore_index=True)
     df.to_excel(books_path, index=False)
 
 def remove_book(book_id: int):
@@ -124,7 +127,7 @@ class Address:
         return f"{self.__city}, {self.__street}, {self.__apartment} {self.postal_code}"
 
 #Part responsible for readers
-readers_path = "./data/readers.xlsx"
+readers_path = "./library/data/readers.xlsx"
 readers_columns = ["ID", "Name", "Surname", "Phone"]
 
 class InvalidPhoneNumber(Exception):
@@ -190,7 +193,6 @@ class Reader:
                 self.past_returned[book].append(now)
         else:
             self.past_returned[book] = [now]
-
         self.borrowed_books.remove(book)
 
         book.borrowed = False
@@ -203,6 +205,7 @@ class Reader:
         return fee
         
     def extend(self, book: Book):
+        now = datetime.now()
         if not book.borrowed:
             return "Can't extend book that hasn't been lent"
 
@@ -256,7 +259,7 @@ class Reader:
 """
 
 def prepare_readers_file():
-    os.makedirs("data", exist_ok=True)
+    os.makedirs("./library/data", exist_ok=True)
     if not os.path.exists(readers_path):
         df = pd.DataFrame(columns=readers_columns)
         df.to_excel(readers_path, index=False)
@@ -345,4 +348,3 @@ class Library:
 
     def books_from_excel(self, path):
         self.objects_from_excel(path, self.books)
-
