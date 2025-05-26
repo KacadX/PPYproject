@@ -277,4 +277,8 @@ class GuiApp(App):
     def switch_layout(self, layout_class):
         self.root_widget.clear_widgets()
         new_layout = layout_class(switch_layout_callback=self.switch_layout)
+<<<<<<< HEAD
         self.root_widget.add_widget(new_layout)
+=======
+        self.root_widget.add_widget(new_layout)
+>>>>>>> 294ddb9 (dodana działająca logika przycisków i dodawania książek i czytelników)
