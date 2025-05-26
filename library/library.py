@@ -155,22 +155,17 @@ class Reader:
         self.past_extended: dict[Book, list[datetime.date]] = {}
         self.past_reserved: dict[Book, list[datetime.date]] = {}
 
-<<<<<<< HEAD
     def getID(self):
         return self.__id
 
     def borrow(self, book: Book):
         now = datetime.now()
-=======
-    def lend(self, book: Book):
-        if not getattr(book, "borrowed", False):
-            now = datetime.now()
->>>>>>> 294ddb9 (dodana działająca logika przycisków i dodawania książek i czytelników)
 
         if ((not book.reserved_until < now) or book.reserved_by == self):
             if not book.lent:
                 self.borrowed_books.append(book)
 
+<<<<<<< HEAD
 <<<<<<< HEAD
                 if book in self.past_borrowed:
                         self.past_borrowed[book].append(now())
@@ -206,6 +201,21 @@ class Reader:
                 return "Can't borrow already lent book."
         else:
             return "Book lent and reserved by someone else"
+=======
+                # Either create the list or append to the existing one
+                if book in self.past_borrowed:
+                        self.past_borrowed[book].append(now())
+                else:
+                    self.past_borrowed[book] = [now()]
+
+                book.lent = True
+                book.lent_date = now
+                book.return_date = now + timedelta(days=30)
+            else:
+                return "Can't borrow already lent book."
+        else:
+            return: "Book lent and reserved by someone else"
+>>>>>>> 6906f97 (fixes)
 
     def return_book(self, book: Book):
         now = datetime.now()
@@ -221,9 +231,13 @@ class Reader:
         else:
             self.past_returned[book] = [now]
 <<<<<<< HEAD
+<<<<<<< HEAD
         self.borrowed_books.remove(book)
 =======
 >>>>>>> 1731705 (first three buttons works now)
+=======
+        self.borrowed_books.remove(book)
+>>>>>>> 6906f97 (fixes)
 
         book.borrowed = False
         book.lent_date = None
@@ -237,13 +251,7 @@ class Reader:
     def extend(self, book: Book):
         now = datetime.now()
         if not book.borrowed:
-            return "can't extend book that hasn't been borrowed"
-        
-        if book in self.past_extended:
-                self.past_extended[book].append(now)
-        else:
-            self.past_extended[book] = [now]
-        book.return_date += timedelta(days=30)
+            return "Can't extend book that hasn't been lent"
 
         if not book.lent_to == self:
             return "Can't extend book lent by someone else"
@@ -340,7 +348,6 @@ def search_reader(query: str):
         df["Surname"].str.lower().str.contains(query) |
         df["Phone"].astype(str).str.contains(query)
     )
-<<<<<<< HEAD
     return df[mask]
 
 # Library database
@@ -385,9 +392,12 @@ class Library:
     def books_from_excel(self, path):
         self.objects_from_excel(path, self.books)
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 =======
     return df[mask]
 >>>>>>> 294ddb9 (dodana działająca logika przycisków i dodawania książek i czytelników)
 >>>>>>> 35ef245 (dodana działająca logika przycisków i dodawania książek i czytelników)
+=======
+>>>>>>> 6906f97 (fixes)
