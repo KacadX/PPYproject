@@ -160,12 +160,9 @@ class Reader:
 
     def borrow(self, book: Book):
         now = datetime.now()
-
         if ((not book.reserved_until < now) or book.reserved_by == self):
             if not book.lent:
                 self.borrowed_books.append(book)
-
-<<<<<<< HEAD
                 if book in self.past_borrowed:
                         self.past_borrowed[book].append(now())
                 else:
@@ -189,19 +186,21 @@ class Reader:
                 book.return_date = now + timedelta(days=30)
                 else:
                     raise Exception("Can't borrow already lent book.")
-=======
-                # Either create the list or append to the existing one
-                if book in self.past_borrowed:
-                        self.past_borrowed[book].append(now())
-                else:
-                    self.past_borrowed[book] = [now()]
+                    # Either create the list or append to the existing one
+                    if book in self.past_borrowed:
+                        self.past_borrowed[book].append(now)
+                    else:
+                        self.past_borrowed[book] = [now]
 
-                book.lent = True
-                book.lent_date = now
-                book.return_date = now + timedelta(days=30)
->>>>>>> 6906f97 (fixes)
-            else:
-                return "Can't borrow already lent book."
+                    if book.reserved_by == self:
+                        book.reserved = False
+                        book.reserved_by = None
+
+                    book.lent = True
+                    book.lent_date = now
+                    book.return_date = now + timedelta(days=30)
+                else:
+                    raise Exception("Can't borrow already lent book.")
         else:
             return: "Book lent and reserved by someone else"
 
@@ -373,7 +372,3 @@ class Library:
 
     def books_from_excel(self, path):
         self.objects_from_excel(path, self.books)
-<<<<<<< HEAD
-        return df[mask]
-=======
->>>>>>> 6906f97 (fixes)
