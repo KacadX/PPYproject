@@ -52,7 +52,7 @@ def edit_reader(reader_id: int, updated_reader: Reader):
         ]
         df.to_excel(readers_path, index=False)
     else:
-        return(f"No reader with ID {reader_id}.")
+        raise NoReader(f"No reader with ID {reader_id}.")
 
 def search_reader(query: str):
     df = load_readers()
