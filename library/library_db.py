@@ -54,8 +54,6 @@ class Book:
     def __str__(self):
         return f"{self.title} ({self.author}, {self.publisher}, {self.page_count} pages.)"
 
-
-
 class Reader:
     __readerID = 0
 
@@ -82,7 +80,7 @@ class Reader:
 
     def borrow(self, book: Book):
         now = datetime.now()
-        if ((not book.reserved_until < now) or book.reserved_by == self):
+        if (not book.reserved_until < now) or book.reserved_by == self:
             if not book.lent:
                 self.borrowed_books.append(book)
                 if book in self.past_borrowed:
