@@ -65,7 +65,7 @@ class Reader:
             else:
                 raise Exception("Can't borrow already lent book.")
         else:
-            return "Book lent and reserved by someone else"
+            return "Book reserved by someone else"
 
     def return_book(self, book: Book):
         now = datetime.now()
