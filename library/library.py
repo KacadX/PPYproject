@@ -55,7 +55,7 @@ class Book:
         return f"{self.title} ({self.author}, {self.publisher}, {self.page_count} pages.)"
 
 """
-===== Pandas books =====
+Pandas books =====
 """
 
 def excel_file_preparer():
@@ -159,19 +159,34 @@ class Reader:
 
     def borrow(self, book: Book):
         now = datetime.now()
-
-        if not book.reserved or book.reserved_by == self:
+        if ((not book.reserved_until < now) or book.reserved_by == self):
             if not book.lent:
                 self.borrowed_books.append(book)
-
-                self.past_borrowed.setdefault(book, []).append(now)
+                if book in self.past_borrowed:
+                        self.past_borrowed[book].append(now())
+                else:
+                    self.past_borrowed[book] = [now()]
 
                 book.lent = True
                 book.lent_to = self
                 book.lent_date = now
                 book.return_date = now + timedelta(days=30)
+                # Either create the list or append to the existing one
+                if book in self.past_borrowed:
+                    self.past_borrowed[book].append(now)
+                else:
+                    self.past_borrowed[book] = [now]
+
+                if book.reserved_by == self:
+                    book.reserved = False
+                    book.reserved_by = None
+
+                book.lent = True
+                book.lent_date = now
+                book.return_date = now + timedelta(days=30)
+
             else:
-                return "Can't borrow already lent book."
+                raise Exception("Can't borrow already lent book.")
         else:
             return "Book lent and reserved by someone else"
 
@@ -183,9 +198,13 @@ class Reader:
         if now > date_until_fee:
             fee = 0.5 * (now - date_until_fee).days
 
-        self.past_returned.setdefault(book, []).append(now)
-        if book in self.borrowed_books:
-            self.borrowed_books.remove(book)
+        # Either create the list or append to the existing one
+        if book in self.past_returned:
+                self.past_returned[book].append(now)
+        else:
+            self.past_returned[book] = [now]
+
+        self.borrowed_books.remove(book)
 
         book.lent = False
         book.lent_date = None
@@ -245,7 +264,7 @@ class Reader:
         return reader
 
 """
-===== Pandas readers =====
+Pandas readers =====
 """
 
 def prepare_readers_file():
@@ -324,6 +343,7 @@ class Library:
         for _, row in df.iterrows():
             row_dict = row.to_dict()
             objects.append(row_dict)
+
         return objects
 
     def readers_from_excel(self, path):
