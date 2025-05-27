@@ -54,8 +54,6 @@ class Book:
     def __str__(self):
         return f"{self.title} ({self.author}, {self.publisher}, {self.page_count} pages.)"
 
-
-
 class Reader:
     __readerID = 0
 
@@ -185,6 +183,7 @@ class Reader:
         reader._Reader__id = d["ID"]
         Reader._Reader__readerID = max(Reader._Reader__readerID, d["ID"])
         return reader
+
 
 
 # Library database
