@@ -9,6 +9,11 @@ from kivy.uix.spinner import Spinner
 from kivy.uix.textinput import TextInput
 
 from gui import Home
+from exceptions import *
+from address import Address
+from book import add_book, load_books_object, edit_book, remove_book
+from library_db import Book, Reader
+from reader import load_readers_object, add_reader, edit_reader, remove_reader
 
 class ManageBooks(BoxLayout):
     def __init__(self, switch_layout_callback, **kwargs):
@@ -100,7 +105,7 @@ class AddBook(BoxLayout):
 
         try:
             pages = int(pages_text)
-        except ValueError:
+        except PageCountException:
             self.message_label.text = "Page count must be numbers."
             return
 
@@ -109,7 +114,7 @@ class AddBook(BoxLayout):
             add_book(book)
             self.message_label.text = f"Book '{title}' added successfully!"
             self.clear_inputs()
-        except Exception as e:
+        except AddingException as e:
             self.message_label.text = f"Error: {e}"
 
     def clear_inputs(self):
@@ -235,7 +240,7 @@ class EditBook(BoxLayout):
             edit_book(book_id, updated_book)
             self.message_label.text = "Book updated successfully!"
             self.update_books()
-        except Exception as e:
+        except BookEditException as e:
             self.message_label.text = f"Error: {e}"
 
 class LendBook(BoxLayout):

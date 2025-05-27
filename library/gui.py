@@ -10,7 +10,6 @@ from kivy.uix.textinput import TextInput
 
 from address import Address
 from book import add_book, load_books_object, edit_book, remove_book
-from exceptions import InvalidPhoneNumber
 from library_db import Book, Reader
 from reader import load_readers_object, add_reader, edit_reader, remove_reader
 

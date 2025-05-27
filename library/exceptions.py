@@ -3,6 +3,14 @@
 class ReaderOrBookNotFound(Exception):
     pass
 
+class DeletionException(Exception):
+    """Raised When something goes wrong during deletion"""
+    pass
+
+class AddingException(Exception):
+    """Raised when can't add reader or book"""
+    pass
+
 """READER EXCEPTIONS"""
 
 class InvalidPhoneNumber(Exception):
@@ -29,4 +37,8 @@ class BookLentToSomeone(Exception):
 
 class BookReserved(Exception):
     """Raised when book is reserved by someone else"""
+    pass
+
+class BookEditException(Exception):
+    """Raised when something goes wrong when editting"""
     pass

@@ -9,6 +9,9 @@ from kivy.uix.spinner import Spinner
 from kivy.uix.textinput import TextInput
 
 from gui import Home
+from exceptions import *
+from reader import *
+from library_db import Reader
 
 class ManageReaders(BoxLayout):
     def __init__(self, switch_layout_callback, **kwargs):
@@ -122,7 +125,7 @@ class AddReader(BoxLayout):
             self.clear_inputs()
         except InvalidPhoneNumber as e:
             self.message_label.text = f"Invalid phone number: {e}"
-        except Exception as e:
+        except AddingException as e:
             self.message_label.text = f"Error: {e}"
 
     def clear_inputs(self):
@@ -328,7 +331,7 @@ class RemoveReader(BoxLayout):
                 remove_reader(reader_id)
                 self.message_label.text = f"Reader '{reader.name} {reader.surname}' removed successfully!"
                 self.update_readers()
-            except Exception as e:
+            except DeletionException as e:
                 self.message_label.text = f"Error: {e}"
         else:
             self.message_label.text = "Reader not found."
