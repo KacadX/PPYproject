@@ -172,7 +172,7 @@ class LendBook(BoxLayout):
         book = next((b for b in self.books if b.id == book_id), None)
 
         if reader and book:
-            result = reader.lend(book)
+            result = reader.borrow(book)
             if result is None:
                 self.message_label.text = f"Book '{book.title}' lent by {reader.name}."
                 self.update_readers_and_books()
@@ -244,14 +244,20 @@ class AddReader(BoxLayout):
         name = self.name.text.strip()
         surname = self.surname.text.strip()
         phone = self.phone_num.text.strip()
+        city = self.city.text.strip()
+        street = self.street.text.strip()
+        apartment = self.apartment.text.strip()
+        postal_code = self.postal_code.text.strip()
 
         if not name or not surname or not phone:
             self.message_label.text = "Please fill in all required fields."
             return
 
         try:
-            reader = Reader(name, surname, phone)
+            address = Address(city, street, apartment, postal_code)
+            reader = Reader(name, surname, phone, address)
             add_reader(reader)
+
             self.message_label.text = f"Reader '{name} {surname}' added successfully!"
             self.clear_inputs()
         except InvalidPhoneNumber as e:

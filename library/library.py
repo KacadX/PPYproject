@@ -21,7 +21,7 @@ class Book:
         self.id = Book.__id
 
         self.lent_date: datetime.date = None
-        self.lent_to: Reader = None
+        self.lent_to: Reader | None = None #nie rozumiem czemu
         self.return_date: datetime.date = None
         self.lent = False
         self.reserved = False
@@ -117,18 +117,18 @@ def search_book(query: str):
 
 # Part responsible for addresses
 class Address:
-    def __init__(self, city: str, street: str, apartment: int, postal_code: str):
-        self.__street = street
-        self.__city = city
-        self.__postal_code = postal_code
-        self.__apartment = apartment
+    def __init__(self, city, street, apartment, postal_code):
+        self.city = city
+        self.street = street
+        self.apartment = apartment
+        self.postal_code = postal_code
 
     def __str__(self):
-        return f"{self.__city}, {self.__street}, {self.__apartment} {self.postal_code}"
+        return f"{self.street} {self.apartment}, {self.postal_code} {self.city}"
 
 #Part responsible for readers
 readers_path = "./library/data/readers.xlsx"
-readers_columns = ["ID", "Name", "Surname", "Phone"]
+readers_columns = ["ID", "Name", "Surname", "Phone", "City", "Street", "Apartment", "Postal Code"]
 
 class InvalidPhoneNumber(Exception):
     """Raised when phone number is invalid."""
@@ -136,41 +136,38 @@ class InvalidPhoneNumber(Exception):
 class Reader:
     __readerID = 0
 
-    def __init__(self, name: str, surname: str, phone_num: str, address: Address):
-        try:
-            if not phone_num.isdigit() or len(phone_num) != 9:
-                raise InvalidPhoneNumber("Phone number must consist of exactly 9 digits.")
-        except InvalidPhoneNumber as e:
-            print(e)
+    def __init__(self, name: str, surname: str, phone_num: str, address: Address = None):
+        if not phone_num.isdigit() or len(phone_num) != 9:
+            raise InvalidPhoneNumber("Phone number must consist of exactly 9 digits.")
 
         self.name = name
         self.surname = surname
         self.phone_num = phone_num
+        self.address = address
         Reader.__readerID += 1
         self.__id = Reader.__readerID
         self.borrowed_books: list[Book] = []
 
-        self.past_borrowed: dict[Book, list[datetime.date]] = {}
-        self.past_returned: dict[Book, list[datetime.date]] = {}
-        self.past_extended: dict[Book, list[datetime.date]] = {}
-        self.past_reserved: dict[Book, list[datetime.date]] = {}
+        self.past_borrowed: dict[Book, list[datetime]] = {}
+        self.past_returned: dict[Book, list[datetime]] = {}
+        self.past_extended: dict[Book, list[datetime]] = {}
+        self.past_reserved: dict[Book, list[datetime]] = {}
 
-    def getID(self):
+    @property
+    def id(self):
         return self.__id
 
     def borrow(self, book: Book):
         now = datetime.now()
 
-        if ((not book.reserved_until < now) or book.reserved_by == self):
+        if not book.reserved or book.reserved_by == self:
             if not book.lent:
                 self.borrowed_books.append(book)
 
-                if book in self.past_borrowed:
-                        self.past_borrowed[book].append(now())
-                else:
-                    self.past_borrowed[book] = [now()]
+                self.past_borrowed.setdefault(book, []).append(now)
 
                 book.lent = True
+                book.lent_to = self
                 book.lent_date = now
                 book.return_date = now + timedelta(days=30)
             else:
@@ -184,71 +181,67 @@ class Reader:
         fee = 0
 
         if now > date_until_fee:
-            difference = (now - date_until_fee).days
-            fee = 0.5 * difference
+            fee = 0.5 * (now - date_until_fee).days
 
-        if book in self.past_returned:
-                self.past_returned[book].append(now)
-        else:
-            self.past_returned[book] = [now]
-        self.borrowed_books.remove(book)
+        self.past_returned.setdefault(book, []).append(now)
+        if book in self.borrowed_books:
+            self.borrowed_books.remove(book)
 
-        book.borrowed = False
+        book.lent = False
         book.lent_date = None
+        book.lent_to = None
+        book.return_date = None
 
-        if book.reserved == True and book.reserved_by == self:
+        if book.reserved and book.reserved_by == self:
             book.reserved = False
             book.reserved_by = None
 
         return fee
-        
+
     def extend(self, book: Book):
-        now = datetime.now()
-        if not book.borrowed:
+        if not book.lent:
             return "Can't extend book that hasn't been lent"
-
-        if not book.lent_to == self:
+        if book.lent_to != self:
             return "Can't extend book lent by someone else"
-
-        # Either create the list or append to the existing one
-        if not book.reserved:
-            if book in self.past_extended:
-                    self.past_extended[book].append(datetime.now())
-            else:
-                self.past_extended[book] = [datetime.now()]
-            book.return_date += timedelta(days=30)
-
-            return f"Extended the return date, new return date: {book.return_date}"
-        else:
+        if book.reserved:
             return "Can't extend - book reserved by someone"
 
+        self.past_extended.setdefault(book, []).append(datetime.now())
+        book.return_date += timedelta(days=30)
+        return f"Extended the return date, new return date: {book.return_date}"
+
     def reserve(self, book: Book):
-        now = datetime.now()
-
         if not book.reserved:
-            book.reserved_until = book.return_date + timedelta(days=7)
+            book.reserved_until = datetime.now() + timedelta(days=7)
             book.reserved_by = self
-
-            if book in self.past_borrowed:
-                    self.past_reserved[book].append(datetime.now())
-            else:
-                self.past_reserved[book] = [datetime.now()]
+            self.past_reserved.setdefault(book, []).append(datetime.now())
         else:
-            return "can't reserve book - already reserved"
+            return "Can't reserve book - already reserved"
 
     def to_dict(self):
         return {
             "ID": self.__id,
             "Name": self.name,
             "Surname": self.surname,
-            "Phone": self.phone_num
+            "Phone": self.phone_num,
+            "City": self.address.city if self.address else "",
+            "Street": self.address.street if self.address else "",
+            "Apartment": self.address.apartment if self.address else "",
+            "Postal Code": self.address.postal_code if self.address else ""
         }
 
     @staticmethod
     def from_dict(d):
-        reader = Reader(d["Name"], d["Surname"], str(d["Phone"]))
-        reader.__id = d["ID"]
-        Reader.__readerID = max(Reader.__readerID, d["ID"])
+        address = Address(
+            d.get("City", ""),
+            d.get("Street", ""),
+            d.get("Apartment", ""),
+            d.get("Postal Code", "")
+        )
+
+        reader = Reader(d["Name"], d["Surname"], str(d["Phone"]), address=address)
+        reader._Reader__id = d["ID"]
+        Reader._Reader__readerID = max(Reader._Reader__readerID, d["ID"])
         return reader
 
 """
@@ -272,7 +265,7 @@ def load_readers_object():
 def add_reader(reader: Reader):
     df = load_readers()
     new_id = 1 if df.empty else int(df["ID"].max()) + 1
-    reader.__id = new_id
+    reader._Reader__id = new_id
     Reader._Reader__readerID = new_id
     df = pd.concat([df, pd.DataFrame([reader.to_dict()])], ignore_index=True)
     df.to_excel(readers_path, index=False)
@@ -285,10 +278,14 @@ def remove_reader(reader_id: int):
 def edit_reader(reader_id: int, updated_reader: Reader):
     df = load_readers()
     if reader_id in df["ID"].values:
-        df.loc[df["ID"] == reader_id, ["Name", "Surname", "Phone"]] = [
+        df.loc[df["ID"] == reader_id, ["Name", "Surname", "Phone", "City", "Street", "Apartment", "Postal Code"]] = [
             updated_reader.name,
             updated_reader.surname,
-            updated_reader.phone_num
+            updated_reader.phone_num,
+            updated_reader.address.city if updated_reader.address else "",
+            updated_reader.address.street if updated_reader.address else "",
+            updated_reader.address.apartment if updated_reader.address else "",
+            updated_reader.address.postal_code if updated_reader.address else ""
         ]
         df.to_excel(readers_path, index=False)
     else:
@@ -309,36 +306,25 @@ class Library:
     def __init__(self):
         self.readers: list[Reader] = []
         self.books: list[Book] = []
+        self.available_books: list[Book] = []
+        self.lent_books: list[Book] = []
 
     def show_available_books(self) -> list[Book]:
-        books = self.books
-
-        for book in books:
-            if not book.lent and not book.reserved:
-                self.available_books.append(book)
+        self.available_books = [b for b in self.books if not b.lent and not b.reserved]
         return self.available_books
 
     def show_lent_books(self) -> list[Book]:
-        books = self.books
-
-        for book in books:
-            if book.lent:
-                self.lent_books.append(book)
+        self.lent_books = [b for b in self.books if b.lent]
         return self.lent_books
-    
+
     def objects_from_excel(self, path: str, objects: list) -> list:
-        try:
-            if not os.path.isfile(path):
-                raise FileNotFoundError
-        except FileNotFoundError as e:
-            print(e)
+        if not os.path.isfile(path):
+            raise FileNotFoundError(f"{path} not found.")
         df = pd.read_excel(path)
-        for index, row in df.iterrows():
+        for _, row in df.iterrows():
             row_dict = row.to_dict()
             objects.append(row_dict)
-
         return objects
-
 
     def readers_from_excel(self, path):
         self.objects_from_excel(path, self.readers)
