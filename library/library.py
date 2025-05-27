@@ -55,7 +55,7 @@ class Book:
         return f"{self.title} ({self.author}, {self.publisher}, {self.page_count} pages.)"
 
 """
-===== Pandas books =====
+Pandas books =====
 """
 
 def excel_file_preparer():
@@ -160,11 +160,9 @@ class Reader:
 
     def borrow(self, book: Book):
         now = datetime.now()
-
         if ((not book.reserved_until < now) or book.reserved_by == self):
             if not book.lent:
                 self.borrowed_books.append(book)
-
                 if book in self.past_borrowed:
                         self.past_borrowed[book].append(now())
                 else:
@@ -173,8 +171,22 @@ class Reader:
                 book.lent = True
                 book.lent_date = now
                 book.return_date = now + timedelta(days=30)
+                # Either create the list or append to the existing one
+                if book in self.past_borrowed:
+                    self.past_borrowed[book].append(now)
+                else:
+                    self.past_borrowed[book] = [now]
+
+                if book.reserved_by == self:
+                    book.reserved = False
+                    book.reserved_by = None
+
+                book.lent = True
+                book.lent_date = now
+                book.return_date = now + timedelta(days=30)
+
             else:
-                return "Can't borrow already lent book."
+                raise Exception("Can't borrow already lent book.")
         else:
             return "Book lent and reserved by someone else"
 
@@ -191,6 +203,7 @@ class Reader:
                 self.past_returned[book].append(now)
         else:
             self.past_returned[book] = [now]
+
         self.borrowed_books.remove(book)
 
         book.borrowed = False
@@ -252,7 +265,7 @@ class Reader:
         return reader
 
 """
-===== Pandas readers =====
+Pandas readers =====
 """
 
 def prepare_readers_file():
@@ -337,7 +350,7 @@ class Library:
             row_dict = row.to_dict()
             objects.append(row_dict)
 
-        return objects
+            return objects
 
 
     def readers_from_excel(self, path):
