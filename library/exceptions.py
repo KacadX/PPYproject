@@ -19,6 +19,10 @@ class PageCountException(Exception):
     """Raised when value of page count is invalid"""
     pass
 
+class NoBookFound(Exception):
+    """Raised when there's no book that matches the cryteria"""
+    pass
+
 class BookLentToSomeone(Exception):
     """Raised when book is not available to lend"""
     pass
