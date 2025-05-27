@@ -1,58 +1,10 @@
+import os
 import pandas as pd
 
-from library import *
-from reader import *
+from library.library_db import Book
 
-#Part responsible for books
 books_path = "./library/data/books.xlsx"
 books_columns = ["ID", "Title", "Author", "ISBN", "Publisher", "Pages"]
-
-class Book:
-    __id = 0
-
-    def __init__(self, title: str, author: str, isbn: int, publisher: str, page_count: int):
-        self.title = title
-        self.author = author
-        self.isbn = isbn
-        self.publisher = publisher
-        self.page_count = page_count
-
-        Book.__id += 1
-        self.id = Book.__id
-
-        self.lent_date: datetime.date = None
-        self.lent_to: Reader | None = None
-        self.return_date: datetime.date = None
-        self.lent = False
-        self.reserved = False
-        self.reserved_until: datetime.date = datetime.now()
-        self.reserved_by: Reader = None
-
-    def to_dict(self):
-        return {
-            "ID": self.id,
-            "Title": self.title,
-            "Author": self.author,
-            "ISBN": self.isbn,
-            "Publisher": self.publisher,
-            "Pages": self.page_count
-        }
-
-    @staticmethod
-    def from_dict(d):
-        book = Book(
-            d["Title"],
-            d["Author"],
-            d["ISBN"],
-            d["Publisher"],
-            d["Pages"]
-        )
-        book.id = d["ID"]
-        Book.__id = max(Book.__id, d["ID"])  # Ensure unique IDs
-        return book
-
-    def __str__(self):
-        return f"{self.title} ({self.author}, {self.publisher}, {self.page_count} pages.)"
 
 """
 Pandas books =====
