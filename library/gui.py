@@ -1,11 +1,13 @@
 from kivy.uix.image import Image
 from kivy.uix.spinner import Spinner
-from library import *
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
+from library import *
+from book import *
+from reader import *
 
 class Home(BoxLayout):
     def __init__(self, switch_layout_callback, **kwargs):
@@ -84,19 +86,18 @@ class AddBook(BoxLayout):
     def submit_book(self, instance):
         title = self.title_input.text.strip()
         author = self.author_input.text.strip()
-        isbn_text = self.isbn_input.text.strip()
+        isbn = self.isbn_input.text.strip()
         publisher = self.publisher_input.text.strip()
         pages_text = self.pages_input.text.strip()
 
-        if not title or not author or not isbn_text or not publisher or not pages_text:
+        if not title or not author or not isbn or not publisher or not pages_text:
             self.message_label.text = "Please fill in all fields."
             return
 
         try:
-            isbn = int(isbn_text)
             pages = int(pages_text)
         except ValueError:
-            self.message_label.text = "ISBN and Page count must be numbers."
+            self.message_label.text = "Page count must be numbers."
             return
 
         try:
