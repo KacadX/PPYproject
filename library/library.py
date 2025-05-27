@@ -55,7 +55,7 @@ class Book:
         return f"{self.title} ({self.author}, {self.publisher}, {self.page_count} pages.)"
 
 """
-===== Pandas books =====
+Pandas books =====
 """
 
 def excel_file_preparer():
@@ -184,25 +184,11 @@ class Reader:
                 book.lent = True
                 book.lent_date = now
                 book.return_date = now + timedelta(days=30)
-                else:
-                    raise Exception("Can't borrow already lent book.")
-                    # Either create the list or append to the existing one
-                    if book in self.past_borrowed:
-                        self.past_borrowed[book].append(now)
-                    else:
-                        self.past_borrowed[book] = [now]
 
-                    if book.reserved_by == self:
-                        book.reserved = False
-                        book.reserved_by = None
-
-                    book.lent = True
-                    book.lent_date = now
-                    book.return_date = now + timedelta(days=30)
-                else:
-                    raise Exception("Can't borrow already lent book.")
+            else:
+                raise Exception("Can't borrow already lent book.")
         else:
-            return: "Book lent and reserved by someone else"
+            return "Book lent and reserved by someone else"
 
     def return_book(self, book: Book):
         now = datetime.now()
@@ -279,7 +265,7 @@ class Reader:
         return reader
 
 """
-===== Pandas readers =====
+Pandas readers =====
 """
 
 def prepare_readers_file():
@@ -364,7 +350,7 @@ class Library:
             row_dict = row.to_dict()
             objects.append(row_dict)
 
-        return objects
+            return objects
 
 
     def readers_from_excel(self, path):
