@@ -2,8 +2,8 @@ import os
 from datetime import datetime, timedelta
 import pandas as pd
 
-from library.address import Address
-from library.exceptions import InvalidPhoneNumber
+from address import Address
+from exceptions import InvalidPhoneNumber
 
 
 #Part responsible for books

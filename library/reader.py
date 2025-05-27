@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 
-from library.library_db import Reader
+from library_db import Reader
 
 #Part responsible for readers
 readers_path = "./library/data/readers.xlsx"
