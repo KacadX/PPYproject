@@ -21,7 +21,7 @@ class Book:
         self.id = Book.__id
 
         self.lent_date: datetime.date = None
-        self.lent_to: Reader | None = None #nie rozumiem czemu
+        self.lent_to: Reader | None = None
         self.return_date: datetime.date = None
         self.lent = False
         self.reserved = False
