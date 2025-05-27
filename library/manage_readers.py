@@ -10,8 +10,10 @@ from kivy.uix.textinput import TextInput
 
 from gui import Home
 from exceptions import *
-from reader import *
-from library_db import Reader
+from address import Address
+from book import add_book, load_books_object, edit_book, remove_book
+from library_db import Book, Reader
+from reader import load_readers_object, add_reader, edit_reader, remove_reader
 
 class ManageReaders(BoxLayout):
     def __init__(self, switch_layout_callback, **kwargs):
