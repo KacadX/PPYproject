@@ -201,17 +201,17 @@ class EditReader(BoxLayout):
             return
 
         reader_id = int(text.split(":")[0])
-        reader = next((r for r in self.readers if r.id == reader_id), None)
+        reader_search = next((r for r in self.readers if r.id == reader_id), None)
 
-        if reader:
-            self.name.text = reader.name
-            self.surname.text = reader.surname
-            self.phone_num.text = reader.phone_num
-            if reader.address:
-                self.city.text = reader.address.city
-                self.street.text = reader.address.street
-                self.apartment.text = reader.address.apartment
-                self.postal_code.text = reader.address.postal_code
+        if reader_search:
+            self.name.text = reader_search.name
+            self.surname.text = reader_search.surname
+            self.phone_num.text = reader_search.phone_num
+            if reader_search.address:
+                self.city.text = reader_search.address.city
+                self.street.text = reader_search.address.street
+                self.apartment.text = reader_search.address.apartment
+                self.postal_code.text = reader_search.address.postal_code
 
     def save_changes(self, instance):
         reader_text = self.reader_spinner.text
@@ -323,12 +323,12 @@ class RemoveReader(BoxLayout):
             return
 
         reader_id = int(reader_text.split(":")[0])
-        reader = next((r for r in self.readers if r.id == reader_id), None)
+        reader_search = next((r for r in self.readers if r.id == reader_id), None)
 
-        if reader:
+        if reader_search:
             try:
                 remove_reader(reader_id)
-                self.message_label.text = f"Reader '{reader.name} {reader.surname}' removed successfully!"
+                self.message_label.text = f"Reader '{reader_search.name} {reader_search.surname}' removed successfully!"
                 self.update_readers()
             except DeletionException as e:
                 self.message_label.text = f"Error: {e}"
