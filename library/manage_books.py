@@ -399,7 +399,7 @@ class ReturnBook(BoxLayout):
         book_search = next((b for b in self.books if b.id == book_id), None)
 
         if reader_search and book_search:
-            if book_search not in reader_search.borrowed_books:
+            if not book_search.lent or book_search.lent_to != reader_id:
                 self.message_label.text = f"Error: This book is not borrowed by {reader_search.name} {reader_search.surname}."
                 return
 
@@ -466,11 +466,11 @@ class RemoveBook(BoxLayout):
                 remove_book(book_id)
                 self.message_label.text = f"Book '{book_search.title}' removed successfully!"
                 self.update_books()
-            except Exception as e:
+            except DeletionException as e:
                 self.message_label.text = f"Error: {e}"
         else:
             self.message_label.text = "Book not found."
-
+            
 class ReserveBook(BoxLayout):
     def __init__(self, switch_layout_callback, **kwargs):
         super(ReserveBook, self).__init__(**kwargs)
