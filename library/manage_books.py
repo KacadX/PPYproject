@@ -385,7 +385,7 @@ class RemoveBook(BoxLayout):
                 remove_book(book_id)
                 self.message_label.text = f"Book '{book.title}' removed successfully!"
                 self.update_books()
-            except Exception as e:
+            except DeletionException as e:
                 self.message_label.text = f"Error: {e}"
         else:
             self.message_label.text = "Book not found."
