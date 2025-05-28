@@ -43,4 +43,3 @@ class Home(BoxLayout):
     @staticmethod
     def exit_app(instance):
         App.get_running_app().stop()
-
