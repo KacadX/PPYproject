@@ -1,5 +1,5 @@
 from kivy.app import App
-from library.gui import Home
+from gui import Home
 
 class GuiApp(App):
     def build(self):

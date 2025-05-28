@@ -2,8 +2,8 @@ import os
 from datetime import datetime, timedelta
 import pandas as pd
 
-from library.address import Address
-from library.exceptions import InvalidPhoneNumber
+from address import Address
+from exceptions import InvalidPhoneNumber
 
 
 #Part responsible for books
@@ -53,8 +53,6 @@ class Book:
 
     def __str__(self):
         return f"{self.title} ({self.author}, {self.publisher}, {self.page_count} pages.)"
-
-
 
 class Reader:
     __readerID = 0
@@ -109,9 +107,9 @@ class Reader:
                 book.return_date = now + timedelta(days=30)
 
             else:
-                raise Exception("Can't borrow already lent book.")
+                raise BookLentToSomeone("Can't borrow already lent book.")
         else:
-            return "Book reserved by someone else"
+            raise BookReserved("Book reserved by someone else")
 
     def return_book(self, book: Book):
         now = datetime.now()
@@ -158,7 +156,7 @@ class Reader:
             book.reserved_by = self
             self.past_reserved.setdefault(book, []).append(datetime.now())
         else:
-            return "Can't reserve book - already reserved"
+            raise BookReserved("Can't reserve book - already reserved")
 
     def to_dict(self):
         return {
@@ -185,6 +183,8 @@ class Reader:
         reader._Reader__id = d["ID"]
         Reader._Reader__readerID = max(Reader._Reader__readerID, d["ID"])
         return reader
+
+
 
 # Library database
 class Library:

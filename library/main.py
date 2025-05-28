@@ -1,4 +1,4 @@
-from library.app import GuiApp
+from app import GuiApp
 
 gui = GuiApp()
 gui.run()
