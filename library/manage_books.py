@@ -1,19 +1,16 @@
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
-from kivy.uix.image import Image
 from kivy.uix.label import Label
 from kivy.uix.button import Button
-from kivy.app import App
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.spinner import Spinner
 from kivy.uix.textinput import TextInput
 
 from gui import Home
 from exceptions import *
-from address import Address
 from book import add_book, load_books_object, edit_book, remove_book
-from library_db import Book, Reader
-from reader import load_readers_object, add_reader, edit_reader, remove_reader
+from library_db import Book
+from reader import load_readers_object
 
 class ManageBooks(BoxLayout):
     def __init__(self, switch_layout_callback, **kwargs):
@@ -127,31 +124,59 @@ class AddBook(BoxLayout):
 class BookList(BoxLayout):
     def __init__(self, switch_layout_callback, **kwargs):
         super(BookList, self).__init__(**kwargs)
-        self.orientation = "vertical"
+
         self.switch_layout_callback = switch_layout_callback
 
-        self.add_widget(Label(text="Book List", size_hint_y=0.1))
+        self.orientation = "vertical"
+        self.spacing = 10
 
-        scroll_view = ScrollView()
-        self.list_layout = GridLayout(cols=1, spacing=10, size_hint_y=None)
-        self.list_layout.bind(minimum_height=self.list_layout.setter('height'))
+        columns_layout = BoxLayout(orientation="horizontal", size_hint_y=0.9)
+
+        free_books_layout = BoxLayout(orientation="vertical")
+        free_books_layout.add_widget(Label(text="available Books", size_hint_y=0.1))
+
+        self.free_scroll = ScrollView()
+        self.free_list = GridLayout(cols=1, spacing=10, size_hint_y=None)
+        self.free_list.bind(minimum_height=self.free_list.setter('height'))
+        self.free_scroll.add_widget(self.free_list)
+        free_books_layout.add_widget(self.free_scroll)
+
+        lent_books_layout = BoxLayout(orientation="vertical")
+        lent_books_layout.add_widget(Label(text="Borrowed Books", size_hint_y=0.1))
+
+        self.lent_scroll = ScrollView()
+        self.lent_list = GridLayout(cols=1, spacing=10, size_hint_y=None)
+        self.lent_list.bind(minimum_height=self.lent_list.setter('height'))
+        self.lent_scroll.add_widget(self.lent_list)
+        lent_books_layout.add_widget(self.lent_scroll)
+
+        columns_layout.add_widget(free_books_layout)
+        columns_layout.add_widget(lent_books_layout)
+
+        self.add_widget(columns_layout)
+
+        btn_back = Button(text="Back", size_hint_y=0.1)
+        btn_back.bind(on_press=lambda x: self.switch_layout_callback(ManageBooks))
+        self.add_widget(btn_back)
 
         self.refresh_list()
 
-        scroll_view.add_widget(self.list_layout)
-        self.add_widget(scroll_view)
-
-        btn_back = Button(text="Back", size_hint_y=0.1)
-        btn_back.bind(on_press=lambda x: switch_layout_callback(ManageBooks))
-        self.add_widget(btn_back)
-
     def refresh_list(self):
-        self.list_layout.clear_widgets()
+        self.free_list.clear_widgets()
+        self.lent_list.clear_widgets()
+
         books = load_books_object()
+
         for book in books:
             book_label = Label(text=f"{book.id}: {book.title} by {book.author}",
                                size_hint_y=None, height=40)
-            self.list_layout.add_widget(book_label)
+
+            if book.lent:
+                book_label.color = (1, 0, 0, 1)
+                self.lent_list.add_widget(book_label)
+            else:
+                book_label.color = (0, 1, 0, 1)
+                self.free_list.add_widget(book_label)
 
 class EditBook(BoxLayout):
     def __init__(self, switch_layout_callback, **kwargs):

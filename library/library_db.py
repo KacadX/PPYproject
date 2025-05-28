@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 
 from address import Address
-from exceptions import InvalidPhoneNumber
+from exceptions import InvalidPhoneNumber, BookLentToSomeone, BookReserved
 
 
 #Part responsible for books
@@ -80,32 +80,22 @@ class Reader:
 
     def borrow(self, book: Book):
         now = datetime.now()
-        if ((not book.reserved_until < now) or book.reserved_by == self):
+        if (not book.reserved or book.reserved_by == self):
             if not book.lent:
                 self.borrowed_books.append(book)
-                if book in self.past_borrowed:
-                        self.past_borrowed[book].append(now())
-                else:
-                    self.past_borrowed[book] = [now()]
-
-                book.lent = True
-                book.lent_to = self
-                book.lent_date = now
-                book.return_date = now + timedelta(days=30)
-                # Either create the list or append to the existing one
                 if book in self.past_borrowed:
                     self.past_borrowed[book].append(now)
                 else:
                     self.past_borrowed[book] = [now]
 
-                if book.reserved_by == self:
-                    book.reserved = False
-                    book.reserved_by = None
-
                 book.lent = True
+                book.lent_to = self
                 book.lent_date = now
                 book.return_date = now + timedelta(days=30)
 
+                if book.reserved_by == self:
+                    book.reserved = False
+                    book.reserved_by = None
             else:
                 raise BookLentToSomeone("Can't borrow already lent book.")
         else:
@@ -202,7 +192,8 @@ class Library:
         self.lent_books = [b for b in self.books if b.lent]
         return self.lent_books
 
-    def objects_from_excel(self, path: str, objects: list) -> list:
+    @staticmethod
+    def objects_from_excel(path: str, objects: list) -> list:
         if not os.path.isfile(path):
             raise FileNotFoundError(f"{path} not found.")
         df = pd.read_excel(path)

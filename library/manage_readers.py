@@ -1,9 +1,7 @@
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
-from kivy.uix.image import Image
 from kivy.uix.label import Label
 from kivy.uix.button import Button
-from kivy.app import App
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.spinner import Spinner
 from kivy.uix.textinput import TextInput
@@ -11,8 +9,7 @@ from kivy.uix.textinput import TextInput
 from gui import Home
 from exceptions import *
 from address import Address
-from book import add_book, load_books_object, edit_book, remove_book
-from library_db import Book, Reader
+from library_db import Reader
 from reader import load_readers_object, add_reader, edit_reader, remove_reader
 
 class ManageReaders(BoxLayout):

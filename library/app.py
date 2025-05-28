@@ -2,8 +2,11 @@ from kivy.app import App
 from gui import Home
 
 class GuiApp(App):
-    def build(self):
+    def __init__(self):
+        super().__init__()
         self.root_widget = Home(self.switch_layout)
+
+    def build(self):
         return self.root_widget
 
     def switch_layout(self, layout_class):

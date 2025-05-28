@@ -1,18 +1,8 @@
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.gridlayout import GridLayout
 from kivy.uix.image import Image
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.app import App
-from kivy.uix.scrollview import ScrollView
-from kivy.uix.spinner import Spinner
-from kivy.uix.textinput import TextInput
-
-from address import Address
-from book import add_book, load_books_object, edit_book, remove_book
-from library_db import Book, Reader
-from reader import load_readers_object, add_reader, edit_reader, remove_reader
-
 
 class Home(BoxLayout):
     def __init__(self, switch_layout_callback, **kwargs):
@@ -50,6 +40,7 @@ class Home(BoxLayout):
         self.add_widget(top_layout)
         self.add_widget(buttons_layout)
 
-    def exit_app(self, instance):
+    @staticmethod
+    def exit_app(instance):
         App.get_running_app().stop()
 

@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 
+from library.exceptions import NoReader
 from library_db import Reader
 
 #Part responsible for readers
