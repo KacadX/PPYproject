@@ -63,9 +63,8 @@ class Book:
         book.reserved_by = d.get("Reserved by", None)
         book.reserved_until = d.get("Reserved until", None)
 
-        Book.__id = max(Book.__id, d["ID"])  # Ensure unique IDs
+        Book.__id = max(Book.__id, d["ID"])
         return book
-
     def __str__(self):
         return f"{self.title} ({self.author}, {self.publisher}, {self.page_count} pages.)"
 
@@ -124,7 +123,7 @@ class Reader:
         date_until_fee = book.return_date
         fee = 0
 
-        if now.days > date_until_fee.days:
+        if now.day > date_until_fee.day:
             fee = 0.5 * (now - date_until_fee).days
 
         if book in self.past_returned:
@@ -132,7 +131,8 @@ class Reader:
         else:
             self.past_returned[book] = [now]
 
-        self.borrowed_books.remove(book)
+        if book in self.borrowed_books:
+            self.borrowed_books.remove(book)
 
         book.lent = False
         book.lent_to = None
@@ -147,7 +147,6 @@ class Reader:
         update_book_status(book.id, False, None)
 
         return fee
-
     def extend(self, book: Book):
         if not book.lent:
             return "Can't extend book that hasn't been lent"
@@ -194,8 +193,12 @@ class Reader:
         reader = Reader(d["Name"], d["Surname"], str(d["Phone"]), address=address)
         reader._Reader__id = d["ID"]
         Reader._Reader__readerID = max(Reader._Reader__readerID, d["ID"])
+        
+        from book import load_books_object
+        all_books = load_books_object()
+        reader.borrowed_books = [book for book in all_books if book.lent and book.lent_to == reader.id]
+        
         return reader
-
 
 
 # Library database
