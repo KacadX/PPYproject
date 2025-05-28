@@ -150,8 +150,6 @@ class Reader:
     def extend(self, book: Book):
         if not book.lent:
             return "Can't extend book that hasn't been lent"
-        if book.lent_to != self:
-            return "Can't extend book lent by someone else"
         if book.reserved:
             return "Can't extend - book reserved by someone"
 
@@ -159,15 +157,14 @@ class Reader:
         book.return_date += timedelta(days=30)
         return f"Extended the return date, new return date: {book.return_date}"
 
-    # TODO dodać do GUI
     def reserve(self, book: Book):
-        if not book.reserved and book.lent:
+        if book.lent and not book.reserved:
             book.reserved_until = book.return_date + timedelta(days=7)
             book.reserved_by = self
             book.reserved = True
             self.past_reserved.setdefault(book, []).append(datetime.now())
         else:
-            raise BookReserved("Can't reserve book - already reserved")
+            raise BookReserved("Can't reserve book - already reserved or not lent")
 
     def to_dict(self):
         return {
@@ -193,11 +190,11 @@ class Reader:
         reader = Reader(d["Name"], d["Surname"], str(d["Phone"]), address=address)
         reader._Reader__id = d["ID"]
         Reader._Reader__readerID = max(Reader._Reader__readerID, d["ID"])
-        
+
         from book import load_books_object
         all_books = load_books_object()
         reader.borrowed_books = [book for book in all_books if book.lent and book.lent_to == reader.id]
-        
+
         return reader
 
 
