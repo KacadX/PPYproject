@@ -150,8 +150,6 @@ class Reader:
     def extend(self, book: Book):
         if not book.lent:
             return "Can't extend book that hasn't been lent"
-        if book.lent_to != self:
-            return "Can't extend book lent by someone else"
         if book.reserved:
             return "Can't extend - book reserved by someone"
 
@@ -159,15 +157,14 @@ class Reader:
         book.return_date += timedelta(days=30)
         return f"Extended the return date, new return date: {book.return_date}"
 
-    # TODO dodać do GUI
     def reserve(self, book: Book):
-        if not book.reserved and book.lent:
+        if book.lent and not book.reserved:
             book.reserved_until = book.return_date + timedelta(days=7)
             book.reserved_by = self
             book.reserved = True
             self.past_reserved.setdefault(book, []).append(datetime.now())
         else:
-            raise BookReserved("Can't reserve book - already reserved")
+            raise BookReserved("Can't reserve book - already reserved or not lent")
 
     def to_dict(self):
         return {
@@ -193,43 +190,9 @@ class Reader:
         reader = Reader(d["Name"], d["Surname"], str(d["Phone"]), address=address)
         reader._Reader__id = d["ID"]
         Reader._Reader__readerID = max(Reader._Reader__readerID, d["ID"])
-        
+
         from book import load_books_object
         all_books = load_books_object()
         reader.borrowed_books = [book for book in all_books if book.lent and book.lent_to == reader.id]
-        
+
         return reader
-
-
-# Library database
-class Library:
-    def __init__(self):
-        self.readers: list[Reader] = []
-        self.books: list[Book] = []
-        self.available_books: list[Book] = []
-        self.lent_books: list[Book] = []
-
-    def show_available_books(self) -> list[Book]:
-        self.available_books = [b for b in self.books if not b.lent and not b.reserved]
-        return self.available_books
-
-    def show_lent_books(self) -> list[Book]:
-        self.lent_books = [b for b in self.books if b.lent]
-        return self.lent_books
-
-    @staticmethod
-    def objects_from_excel(path: str, objects: list) -> list:
-        if not os.path.isfile(path):
-            raise FileNotFoundError(f"{path} not found.")
-        df = pd.read_excel(path)
-        for _, row in df.iterrows():
-            row_dict = row.to_dict()
-            objects.append(row_dict)
-
-        return objects
-
-    def readers_from_excel(self, path):
-        self.objects_from_excel(path, self.readers)
-
-    def books_from_excel(self, path):
-        self.objects_from_excel(path, self.books)

@@ -508,7 +508,7 @@ class ReserveBook(BoxLayout):
 
     def update_readers_and_books(self):
         self.readers = load_readers_object()
-        self.books = [b for b in load_books_object() if not getattr(b, "lent", False) and not getattr(b, "reserved", False)]
+        self.books = [b for b in load_books_object() if getattr(b, "lent", False) and not getattr(b, "reserved", False)]
 
         self.reader_spinner.values = [f"{r.id}: {r.name} {r.surname}" for r in self.readers]
         self.book_spinner.values = [f"{b.id}: {b.title}" for b in self.books]
@@ -594,7 +594,7 @@ class ExtendReturnDate(BoxLayout):
         book_search = next((b for b in self.books if b.id == book_id), None)
 
         if reader_search and book_search:
-            if book_search not in reader_search.borrowed_books:
+            if not book_search.lent or book_search.lent_to != reader_id:
                 self.message_label.text = f"Error: This book is not borrowed by {reader_search.name} {reader_search.surname}."
                 return
 
