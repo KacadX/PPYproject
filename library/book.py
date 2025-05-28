@@ -1,11 +1,13 @@
 import os
+from datetime import datetime, timedelta
+
 import pandas as pd
 
-from library.exceptions import NoBookFound
+from exceptions import NoBookFound
 from library_db import Book
 
 books_path = "./library/data/books.xlsx"
-books_columns = ["ID", "Title", "Author", "ISBN", "Publisher", "Pages"]
+books_columns = ["ID", "Title", "Author", "ISBN", "Publisher", "Pages", "Lent", "Lent to", "Lent date", "Return date", "Reserved", "Reserved by", "Reserved until"]
 
 """
 Pandas books =====
@@ -51,6 +53,19 @@ def edit_book(book_id: int, updated_book: Book):
             updated_book.isbn,
             updated_book.publisher,
             updated_book.page_count
+        ]
+        df.to_excel(books_path, index=False)
+    else:
+        raise NoBookFound(f"No book with ID {book_id} found.")
+
+def update_book_status(book_id: int, is_lent: bool, lent_to: int = None):
+    df = load_books()
+    if book_id in df["ID"].values:
+        df.loc[df["ID"] == book_id, ["Lent", "Lent to", "Lent date", "Return date"]] = [
+            is_lent,
+            lent_to,
+            datetime.now() if is_lent else None,
+            (datetime.now() + timedelta(days=30)) if is_lent else None
         ]
         df.to_excel(books_path, index=False)
     else:

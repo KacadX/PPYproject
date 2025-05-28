@@ -35,7 +35,14 @@ class Book:
             "Author": self.author,
             "ISBN": self.isbn,
             "Publisher": self.publisher,
-            "Pages": self.page_count
+            "Pages": self.page_count,
+            "Lent": self.lent,
+            "Lent to": self.lent_to.id if self.lent_to else None,
+            "Lent date": self.lent_date,
+            "Return date": self.return_date,
+            "Reserved": self.reserved,
+            "Reserved by": self.reserved_by.id if self.reserved_by else None,
+            "Reserved until": self.reserved_until
         }
 
     @staticmethod
@@ -48,9 +55,16 @@ class Book:
             d["Pages"]
         )
         book.id = d["ID"]
-        Book.__id = max(Book.__id, d["ID"])  # Ensure unique IDs
-        return book
+        book.lent = d.get("Lent", False)
+        book.lent_to = d.get("Lent to", None)
+        book.lent_date = d.get("Lent date", None)
+        book.return_date = d.get("Return date", None)
+        book.reserved = d.get("Reserved", False)
+        book.reserved_by = d.get("Reserved by", None)
+        book.reserved_until = d.get("Reserved until", None)
 
+        Book.__id = max(Book.__id, d["ID"])
+        return book
     def __str__(self):
         return f"{self.title} ({self.author}, {self.publisher}, {self.page_count} pages.)"
 
@@ -80,7 +94,7 @@ class Reader:
 
     def borrow(self, book: Book):
         now = datetime.now()
-        if (not book.reserved or book.reserved_by == self):
+        if not book.reserved or book.reserved_by == self:
             if not book.lent:
                 self.borrowed_books.append(book)
                 if book in self.past_borrowed:
@@ -96,6 +110,9 @@ class Reader:
                 if book.reserved_by == self:
                     book.reserved = False
                     book.reserved_by = None
+
+                from book import update_book_status
+                update_book_status(book.id, True, self.id)
             else:
                 raise BookLentToSomeone("Can't borrow already lent book.")
         else:
@@ -106,28 +123,30 @@ class Reader:
         date_until_fee = book.return_date
         fee = 0
 
-        if now > date_until_fee:
+        if now.day > date_until_fee.day:
             fee = 0.5 * (now - date_until_fee).days
 
-        # Either create the list or append to the existing one
         if book in self.past_returned:
-                self.past_returned[book].append(now)
+            self.past_returned[book].append(now)
         else:
             self.past_returned[book] = [now]
 
-        self.borrowed_books.remove(book)
+        if book in self.borrowed_books:
+            self.borrowed_books.remove(book)
 
         book.lent = False
-        book.lent_date = None
         book.lent_to = None
+        book.lent_date = None
         book.return_date = None
 
         if book.reserved and book.reserved_by == self:
             book.reserved = False
             book.reserved_by = None
 
-        return fee
+        from book import update_book_status
+        update_book_status(book.id, False, None)
 
+        return fee
     def extend(self, book: Book):
         if not book.lent:
             return "Can't extend book that hasn't been lent"
@@ -140,10 +159,12 @@ class Reader:
         book.return_date += timedelta(days=30)
         return f"Extended the return date, new return date: {book.return_date}"
 
+    # TODO dodać do GUI
     def reserve(self, book: Book):
-        if not book.reserved:
-            book.reserved_until = datetime.now() + timedelta(days=7)
+        if not book.reserved and book.lent:
+            book.reserved_until = book.return_date + timedelta(days=7)
             book.reserved_by = self
+            book.reserved = True
             self.past_reserved.setdefault(book, []).append(datetime.now())
         else:
             raise BookReserved("Can't reserve book - already reserved")
@@ -172,8 +193,12 @@ class Reader:
         reader = Reader(d["Name"], d["Surname"], str(d["Phone"]), address=address)
         reader._Reader__id = d["ID"]
         Reader._Reader__readerID = max(Reader._Reader__readerID, d["ID"])
+        
+        from book import load_books_object
+        all_books = load_books_object()
+        reader.borrowed_books = [book for book in all_books if book.lent and book.lent_to == reader.id]
+        
         return reader
-
 
 
 # Library database
