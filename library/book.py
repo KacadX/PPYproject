@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 
-from library.exceptions import NoBookFound
+from exceptions import NoBookFound
 from library_db import Book
 
 books_path = "./library/data/books.xlsx"

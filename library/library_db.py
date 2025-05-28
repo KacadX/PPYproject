@@ -106,7 +106,7 @@ class Reader:
         date_until_fee = book.return_date
         fee = 0
 
-        if now > date_until_fee:
+        if now.days > date_until_fee.days:
             fee = 0.5 * (now - date_until_fee).days
 
         # Either create the list or append to the existing one
@@ -140,10 +140,12 @@ class Reader:
         book.return_date += timedelta(days=30)
         return f"Extended the return date, new return date: {book.return_date}"
 
+    # TODO dodać do GUI
     def reserve(self, book: Book):
-        if not book.reserved:
-            book.reserved_until = datetime.now() + timedelta(days=7)
+        if not book.reserved and book.lent:
+            book.reserved_until = book.return_date + timedelta(days=7)
             book.reserved_by = self
+            book.reserved = True
             self.past_reserved.setdefault(book, []).append(datetime.now())
         else:
             raise BookReserved("Can't reserve book - already reserved")
