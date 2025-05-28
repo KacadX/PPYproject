@@ -1,2 +1,7 @@
 # PPYproject
-Python library project
+Python library management project
+
+## Dependencies:
+- kivy
+- pandas
+- openpyxl
