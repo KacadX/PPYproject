@@ -27,6 +27,8 @@ class ManageBooks(BoxLayout):
         btn_remove_book = Button(text="Remove Book", size_hint_y=None, height=50)
         btn_lend_book = Button(text="Lend Book", size_hint_y=None, height=50)
         btn_return_book = Button(text="Return Book", size_hint_y=None, height=50)
+        btn_reserve_book = Button(text="Reserve Book", size_hint_y=None, height=50)
+        btn_extend_book = Button(text="Extend Return Date", size_hint_y=None, height=50)
         btn_list_books = Button(text="Show Book List", size_hint_y=None, height=50)
         btn_back = Button(text="Back to Main Menu", size_hint_y=None, height=50)
 
@@ -35,6 +37,8 @@ class ManageBooks(BoxLayout):
         btn_remove_book.bind(on_press=lambda x: switch_layout_callback(RemoveBook))
         btn_lend_book.bind(on_press=lambda x: switch_layout_callback(LendBook))
         btn_return_book.bind(on_press=lambda x: switch_layout_callback(ReturnBook))
+        btn_reserve_book.bind(on_press=lambda x: switch_layout_callback(ReserveBook))
+        btn_extend_book.bind(on_press=lambda x: switch_layout_callback(ExtendReturnDate))
         btn_list_books.bind(on_press=lambda x: switch_layout_callback(BookList))
         btn_back.bind(on_press=lambda x: switch_layout_callback(Home))
 
@@ -43,6 +47,8 @@ class ManageBooks(BoxLayout):
         buttons_layout.add_widget(btn_remove_book)
         buttons_layout.add_widget(btn_lend_book)
         buttons_layout.add_widget(btn_return_book)
+        buttons_layout.add_widget(btn_reserve_book)
+        buttons_layout.add_widget(btn_extend_book)
         buttons_layout.add_widget(btn_list_books)
         buttons_layout.add_widget(btn_back)
 
@@ -464,3 +470,139 @@ class RemoveBook(BoxLayout):
                 self.message_label.text = f"Error: {e}"
         else:
             self.message_label.text = "Book not found."
+
+class ReserveBook(BoxLayout):
+    def __init__(self, switch_layout_callback, **kwargs):
+        super(ReserveBook, self).__init__(**kwargs)
+        self.orientation = 'vertical'
+        self.switch_layout_callback = switch_layout_callback
+
+        self.add_widget(Label(text="Reserve a Book"))
+
+        self.reader_spinner = Spinner(text="Select Reader")
+        self.book_spinner = Spinner(text="Select Book to Reserve")
+
+        self.update_readers_and_books()
+
+        self.add_widget(self.reader_spinner)
+        self.add_widget(self.book_spinner)
+
+        buttons_layout = BoxLayout(orientation='horizontal', size_hint=(1, 0.2))
+
+        back_btn = Button(text="Back to Menu")
+        back_btn.bind(on_press=self.go_back)
+
+        reserve_btn = Button(text="Reserve Book")
+        reserve_btn.bind(on_press=self.reserve_book)
+
+        buttons_layout.add_widget(back_btn)
+        buttons_layout.add_widget(reserve_btn)
+
+        self.add_widget(buttons_layout)
+
+        self.message_label = Label()
+        self.add_widget(self.message_label)
+
+    def go_back(self, instance):
+        self.switch_layout_callback(Home)
+
+    def update_readers_and_books(self):
+        self.readers = load_readers_object()
+        self.books = [b for b in load_books_object() if not getattr(b, "lent", False) and not getattr(b, "reserved", False)]
+
+        self.reader_spinner.values = [f"{r.id}: {r.name} {r.surname}" for r in self.readers]
+        self.book_spinner.values = [f"{b.id}: {b.title}" for b in self.books]
+
+    def reserve_book(self, instance):
+        reader_text = self.reader_spinner.text
+        book_text = self.book_spinner.text
+
+        if reader_text == "Select Reader" or book_text == "Select Book to Reserve":
+            self.message_label.text = "Please select both reader and book."
+            return
+
+        reader_id = int(reader_text.split(":")[0])
+        book_id = int(book_text.split(":")[0])
+
+        reader_search = next((r for r in self.readers if r.id == reader_id), None)
+        book_search = next((b for b in self.books if b.id == book_id), None)
+
+        if reader_search and book_search:
+            try:
+                reader_search.reserve(book_search)
+                self.message_label.text = f"Book '{book_search.title}' reserved for {reader_search.name} until {book_search.reserved_until.strftime('%Y-%m-%d')}."
+                self.update_readers_and_books()
+            except Exception as e:
+                self.message_label.text = f"Error: {e}"
+        else:
+            self.message_label.text = "Reader or book not found."
+
+class ExtendReturnDate(BoxLayout):
+    def __init__(self, switch_layout_callback, **kwargs):
+        super(ExtendReturnDate, self).__init__(**kwargs)
+        self.orientation = 'vertical'
+        self.switch_layout_callback = switch_layout_callback
+
+        self.add_widget(Label(text="Extend Return Date"))
+
+        self.reader_spinner = Spinner(text="Select Reader")
+        self.book_spinner = Spinner(text="Select Book to Extend")
+
+        self.update_readers_and_books()
+
+        self.add_widget(self.reader_spinner)
+        self.add_widget(self.book_spinner)
+
+        buttons_layout = BoxLayout(orientation='horizontal', size_hint=(1, 0.2))
+
+        back_btn = Button(text="Back to Menu")
+        back_btn.bind(on_press=self.go_back)
+
+        extend_btn = Button(text="Extend Return Date")
+        extend_btn.bind(on_press=self.extend_return_date)
+
+        buttons_layout.add_widget(back_btn)
+        buttons_layout.add_widget(extend_btn)
+
+        self.add_widget(buttons_layout)
+
+        self.message_label = Label()
+        self.add_widget(self.message_label)
+
+    def go_back(self, instance):
+        self.switch_layout_callback(Home)
+
+    def update_readers_and_books(self):
+        self.readers = load_readers_object()
+        self.books = [b for b in load_books_object() if getattr(b, "lent", False)]
+
+        self.reader_spinner.values = [f"{r.id}: {r.name} {r.surname}" for r in self.readers]
+        self.book_spinner.values = [f"{b.id}: {b.title}" for b in self.books if b.lent]
+
+    def extend_return_date(self, instance):
+        reader_text = self.reader_spinner.text
+        book_text = self.book_spinner.text
+
+        if reader_text == "Select Reader" or book_text == "Select Book to Extend":
+            self.message_label.text = "Please select both reader and book."
+            return
+
+        reader_id = int(reader_text.split(":")[0])
+        book_id = int(book_text.split(":")[0])
+
+        reader_search = next((r for r in self.readers if r.id == reader_id), None)
+        book_search = next((b for b in self.books if b.id == book_id), None)
+
+        if reader_search and book_search:
+            if book_search not in reader_search.borrowed_books:
+                self.message_label.text = f"Error: This book is not borrowed by {reader_search.name} {reader_search.surname}."
+                return
+
+            try:
+                result = reader_search.extend(book_search)
+                self.message_label.text = result
+                self.update_readers_and_books()
+            except Exception as e:
+                self.message_label.text = f"Error: {e}"
+        else:
+            self.message_label.text = "Reader or book not found."
