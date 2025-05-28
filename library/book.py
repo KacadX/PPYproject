@@ -1,7 +1,8 @@
 import os
 import pandas as pd
 
-from library.library_db import Book
+from library.exceptions import NoBookFound
+from library_db import Book
 
 books_path = "./library/data/books.xlsx"
 books_columns = ["ID", "Title", "Author", "ISBN", "Publisher", "Pages"]
@@ -53,8 +54,7 @@ def edit_book(book_id: int, updated_book: Book):
         ]
         df.to_excel(books_path, index=False)
     else:
-        print(f"No book with ID {book_id} found.")
-
+        raise NoBookFound(f"No book with ID {book_id} found.")
 
 def search_book(query: str):
     df = load_books()
